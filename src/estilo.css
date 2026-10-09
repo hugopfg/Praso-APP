@@ -331,3 +331,73 @@ html, body { overflow-x: hidden; }
   display: block; width: 18px; height: 18px; border-radius: 50%; background: #2563eb;
   border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.25); transform: translateY(50%);
 }
+
+/* Interface clara e leve, inspirada na identidade azul da Praso. */
+:root:not([data-theme='dark']) {
+  --bg: #f4f7ff;
+  --surface: #fff;
+  --ink: #172b5c;
+  --muted: #64728e;
+  --line: #e2e9f7;
+  --brand: #2455ce;
+  --brand-deep: #1743a5;
+  --brand-soft: #e8efff;
+  --primary: #2455ce;
+  --primary-soft: #e8efff;
+  color-scheme: light;
+}
+body { background: #f4f7ff; }
+.marca-faixa { background: #1743a5; }
+.marca-barra { max-width: 1120px; padding: 13px 24px; }
+.marca-nome { font-size: 1.45rem; }
+.marca-nome span { font-weight: 400; }
+.avatar { background: #ffdf24; color: #172b5c; }
+.app { max-width: 820px; }
+.conteudo { padding: 28px 24px 116px; }
+.topo h1 { font-size: clamp(1.8rem, 4vw, 2.35rem); }
+.meta { border: 1px solid #e5ebf7; box-shadow: 0 4px 18px rgba(31, 64, 132, 0.045); border-radius: 18px; }
+section { margin-top: 34px; }
+section h2 { color: #1743a5; font-size: 1.28rem; letter-spacing: -0.015em; }
+.linha-do-dia { margin-top: 18px; }
+.linha-do-dia > li { grid-template-columns: 58px 1fr; gap: 12px; padding-bottom: 16px; }
+.linha-do-dia > li::before { left: 28px; background: #dce5f6; }
+.hora { padding-top: 12px; }
+.ordem { border-color: #d9e4f7; box-shadow: 0 1px 3px rgba(35, 67, 129, .07); }
+.cartao, .lista-msg li, .lista-ativ li, .ficha, .selecionado {
+  border-color: #e2e9f7; border-radius: 18px; box-shadow: 0 3px 14px rgba(31, 64, 132, 0.045);
+}
+.cartao-corpo { padding: 16px 16px 12px; }
+.nome { color: #172b5c; }
+.etapa { padding: 4px 10px; font-weight: 650; }
+.motivos span, .mini { border-radius: 999px; padding: 4px 10px; }
+.btn { border-radius: 12px; font-weight: 650; transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
+.btn:not(.sec) { box-shadow: 0 2px 6px rgba(31, 75, 176, .12); }
+.btn.destaque-amarelo { background: #ffdf24; color: #172b5c; box-shadow: none; }
+.btn.sec { border-radius: 12px; border-color: #dce5f6; color: #2854b5; }
+.btn:hover { transform: translateY(-1px); }
+.mapa-detalhe-rota { margin-top: 8px; }
+.mapa-titulo { margin: 0 0 8px 70px; }
+.mapa-titulo h3 { font-size: 1rem; color: #1743a5; }
+.mapa-titulo .ajuda { margin-top: 2px; font-size: .88rem; }
+.mapa-rota { height: min(52vh, 430px); min-height: 280px; border-radius: 18px; border-color: #dfe7f6; box-shadow: 0 4px 16px rgba(31, 64, 132, .07); }
+.mapa .leaflet-control-zoom a { color: #2455ce; border-color: #e2e9f7; }
+.pin { box-shadow: 0 2px 7px rgba(16, 37, 82, .2); border-width: 2px; }
+.pin-num { font-size: 11px; }
+.abas {
+  max-width: 820px; border: 1px solid #e5ebf7; border-bottom: 0; border-radius: 18px 18px 0 0;
+  box-shadow: 0 -6px 24px rgba(31, 64, 132, .055); padding: 6px 8px env(safe-area-inset-bottom, 0px);
+}
+.abas button { min-height: 58px; border: 0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: .82rem; }
+.abas button.ativa { background: #eef3ff; color: #2053ce; }
+.aba-icone { width: 21px; height: 21px; }
+.filtros button { border-color: #dfe7f6; border-radius: 999px; }
+.filtros button.on { background: #2455ce; border-color: #2455ce; }
+.opcao { border-width: 1px; border-radius: 16px; background: #fff; }
+.painel { background: #f4f7ff; }
+
+@media (max-width: 600px) {
+  .conteudo { padding: 22px 16px 112px; }
+  .marca-barra { padding-inline: 16px; }
+  .mapa-titulo { margin-left: 70px; }
+  .mapa-rota { min-height: 260px; height: 38vh; }
+}

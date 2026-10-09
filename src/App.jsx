@@ -119,8 +119,16 @@ export default function App() {
       </main>
 
       <nav className="abas" aria-label="Seções">
-        {[['dia', 'Meu dia'], ['mapa', 'Mapa'], ['ativacao', 'Ativação'], ['sobre', 'Sobre']].map(([id, t]) => (
-          <button key={id} className={aba === id ? 'ativa' : ''} aria-current={aba === id} onClick={() => trocarAba(id)}>{t}</button>
+        {[
+          ['dia', 'Meu dia', <><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5M9 21v-7h6v7"/></>],
+          ['mapa', 'Mapa', <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></>],
+          ['ativacao', 'Ativação', <><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M19 8v6M22 11h-6"/></>],
+          ['sobre', 'Sobre', <><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></>],
+        ].map(([id, t, icon]) => (
+          <button key={id} className={aba === id ? 'ativa' : ''} aria-current={aba === id} onClick={() => trocarAba(id)}>
+            <svg className="aba-icone" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
+            <span>{t}</span>
+          </button>
         ))}
       </nav>
 
@@ -184,7 +192,6 @@ function MeuDia({ estado, abrir, iniciar, mensagem }) {
       <section>
         <h2>Rota de hoje</h2>
         <p className="ajuda">Escolhidas pelo valor, ordenadas pelo horário em que o dono costuma estar.</p>
-        {visitas.length > 0 && <Mapa itens={pinos} rota aoTocar={focar} classe="mapa-rota" />}
         <ol className="linha-do-dia">
           {visitas.map(({ e, motivos, acao }, i) => (
             <li key={e.id} id={`visita-${e.id}`} className={`${janelaAgora(e.janelaDono) ? 'agora' : ''} ${foco === e.id ? 'foco' : ''}`}>
@@ -213,6 +220,15 @@ function MeuDia({ estado, abrir, iniciar, mensagem }) {
           ))}
           {visitas.length === 0 && <li className="vazio">Rota concluída. Veja as mensagens abaixo ou a carteira de ativação.</li>}
         </ol>
+        {visitas.length > 0 && (
+          <div className="mapa-detalhe-rota">
+            <div className="mapa-titulo">
+              <h3>Veja a rota no mapa</h3>
+              <p className="ajuda">Toque em um ponto para localizar a visita na lista.</p>
+            </div>
+            <Mapa itens={pinos} rota aoTocar={focar} classe="mapa-rota" />
+          </div>
+        )}
       </section>
 
       <section>
