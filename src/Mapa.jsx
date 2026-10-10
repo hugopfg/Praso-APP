@@ -74,7 +74,7 @@ function elementoPino(it) {
   return el;
 }
 
-function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, classe = '', localizar = false, chave, falhou }) {
+function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, viewportKey = '', classe = '', localizar = false, chave, falhou }) {
   const caixa = useRef(null);
   const mapa = useRef(null);
   const Marcador = useRef(null);
@@ -123,7 +123,6 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
     if (linha.current) { linha.current.setMap(null); linha.current = null; }
     if (!itens.length) return;
 
-    const limites = new g.LatLngBounds();
     itens.forEach((it) => {
       const pos = { lat: it.lat, lng: it.lng };
       const mk = new Marcador.current({
@@ -135,9 +134,7 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
       });
       mk.addEventListener('gmp-click', () => aoTocar?.(it.id));
       marcadores.current.push(mk);
-      limites.extend(pos);
     });
-    if (routePath.length > 1) routePath.forEach((pos) => limites.extend(pos));
 
     if (routePath.length > 1) {
       linha.current = new g.Polyline({
@@ -160,13 +157,21 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
       });
     }
 
-    if (itens.length === 1) {
-      m.setCenter({ lat: itens[0].lat, lng: itens[0].lng });
-      m.setZoom(16);
-    } else {
-      m.fitBounds(limites, 40);
-    }
   }, [pronto, itens, rota, routePath, aoTocar]);
+
+  // Enquadra somente na primeira carga e quando busca/filtros mudam.
+  // Selecionar um pin atualiza o painel sem alterar o zoom escolhido pela pessoa.
+  useEffect(() => {
+    if (!pronto || !itens.length) return;
+    const limites = new window.google.maps.LatLngBounds();
+    itens.forEach((it) => limites.extend({ lat: it.lat, lng: it.lng }));
+    if (itens.length === 1) {
+      mapa.current.setCenter({ lat: itens[0].lat, lng: itens[0].lng });
+      mapa.current.setZoom(Math.max(mapa.current.getZoom() || 0, 16));
+    } else {
+      mapa.current.fitBounds(limites, 40);
+    }
+  }, [pronto, viewportKey, itens]);
 
   function minhaLocalizacao() {
     if (!navigator.geolocation || !pronto) {
@@ -184,7 +189,7 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
           eu.current = new Marcador.current({ map: mapa.current, position: pos, content: ponto, title: 'Você está aqui' });
         }
         mapa.current.setCenter(pos);
-        mapa.current.setZoom(15);
+        mapa.current.setZoom(Math.max(mapa.current.getZoom() || 0, 15));
         setAviso('');
       },
       () => setAviso('Permita a localização para ver onde você está.'),
@@ -208,7 +213,7 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
 
 /* ---------- Mapa alternativo (Leaflet + OpenStreetMap) ---------- */
 
-function MapaLeaflet({ itens, rota = false, routePath = [], aoTocar, onLocation, classe = '', localizar = false }) {
+function MapaLeaflet({ itens, rota = false, routePath = [], aoTocar, onLocation, viewportKey = '', classe = '', localizar = false }) {
   const caixa = useRef(null);
   const mapa = useRef(null);
   const camada = useRef(null);
@@ -251,16 +256,17 @@ function MapaLeaflet({ itens, rota = false, routePath = [], aoTocar, onLocation,
         .on('click', () => aoTocar?.(it.id))
         .addTo(camada.current);
     });
-    const enquadrar = () => {
-      const limites = L.latLngBounds(pontos);
-      if (routePath.length > 1) routePath.forEach(({ lat, lng }) => limites.extend([lat, lng]));
-      m.fitBounds(limites, { padding: [28, 28], maxZoom: 16 });
-    };
-    enquadrar();
-    // O mapa pode nascer num contêiner que ainda está ganhando tamanho: recalcula e reenquadra
-    const t = setTimeout(() => { m.invalidateSize(); enquadrar(); }, 80);
+    // O mapa pode nascer num contêiner que ainda está ganhando tamanho.
+    const t = setTimeout(() => m.invalidateSize(), 80);
     return () => clearTimeout(t);
   }, [itens, rota, routePath, aoTocar]);
+
+  useEffect(() => {
+    const m = mapa.current;
+    if (!m || !itens.length) return;
+    const pontos = itens.map((it) => [it.lat, it.lng]);
+    m.fitBounds(L.latLngBounds(pontos), { padding: [28, 28], maxZoom: 16 });
+  }, [itens, viewportKey]);
 
   function minhaLocalizacao() {
     if (!navigator.geolocation) {
@@ -276,7 +282,7 @@ function MapaLeaflet({ itens, rota = false, routePath = [], aoTocar, onLocation,
           eu.current = L.circleMarker(pos, {
             radius: 8, color: '#ffffff', weight: 3, fillColor: '#6386c8', fillOpacity: 1,
           }).addTo(mapa.current);
-        mapa.current.setView(pos, 15);
+        mapa.current.setView(pos, Math.max(mapa.current.getZoom(), 15));
         setAviso('');
       },
       () => setAviso('Permita a localização para ver onde você está.'),
