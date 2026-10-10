@@ -74,7 +74,7 @@ function elementoPino(it) {
   return el;
 }
 
-function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = false, chave, falhou }) {
+function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, classe = '', localizar = false, chave, falhou }) {
   const caixa = useRef(null);
   const mapa = useRef(null);
   const Marcador = useRef(null);
@@ -96,7 +96,7 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
         if (!vivo) return;
         Marcador.current = AdvancedMarkerElement;
         mapa.current = new Map(caixa.current, {
-          center: { lat: -8.05, lng: -34.9 },
+          center: { lat: -3.689, lng: -40.349 },
           zoom: 13,
           mapId: MAP_ID,
           backgroundColor: '#ffffff',
@@ -137,8 +137,17 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
       marcadores.current.push(mk);
       limites.extend(pos);
     });
+    if (routePath.length > 1) routePath.forEach((pos) => limites.extend(pos));
 
-    if (rota && itens.length > 1) {
+    if (routePath.length > 1) {
+      linha.current = new g.Polyline({
+        map: m,
+        path: routePath.map(({ lat, lng }) => ({ lat, lng })),
+        strokeColor: '#2053CE',
+        strokeOpacity: 0.95,
+        strokeWeight: 5,
+      });
+    } else if (rota && itens.length > 1) {
       linha.current = new g.Polyline({
         map: m,
         path: itens.map((it) => ({ lat: it.lat, lng: it.lng })),
@@ -157,7 +166,7 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
     } else {
       m.fitBounds(limites, 40);
     }
-  }, [pronto, itens, rota, aoTocar]);
+  }, [pronto, itens, rota, routePath, aoTocar]);
 
   function minhaLocalizacao() {
     if (!navigator.geolocation || !pronto) {
@@ -167,6 +176,7 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         const pos = { lat: coords.latitude, lng: coords.longitude };
+        onLocation?.(pos);
         if (eu.current) eu.current.position = pos;
         else {
           const ponto = document.createElement('span');
@@ -187,7 +197,9 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
       <div ref={caixa} className="mapa-caixa" role="region" aria-label="Mapa dos estabelecimentos" />
       {!pronto && <p className="mapa-carregando">Carregando mapa…</p>}
       {localizar && (
-        <button className="btn-local" onClick={minhaLocalizacao}>Minha localização</button>
+        <button className="btn-local" aria-label="Centralizar na minha localização" onClick={minhaLocalizacao}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
+        </button>
       )}
       {aviso && <p className="mapa-aviso">{aviso}</p>}
     </div>
@@ -196,7 +208,7 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
 
 /* ---------- Mapa alternativo (Leaflet + OpenStreetMap) ---------- */
 
-function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = false }) {
+function MapaLeaflet({ itens, rota = false, routePath = [], aoTocar, onLocation, classe = '', localizar = false }) {
   const caixa = useRef(null);
   const mapa = useRef(null);
   const camada = useRef(null);
@@ -205,9 +217,8 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
 
   // Cria o mapa uma vez
   useEffect(() => {
-    const escuro = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
     const m = L.map(caixa.current, { zoomControl: false, attributionControl: true });
-    L.tileLayer(escuro ? TILES.escuro : TILES.claro, { attribution: ATRIB, maxZoom: 19 }).addTo(m);
+    L.tileLayer(TILES.claro, { attribution: ATRIB, maxZoom: 19 }).addTo(m);
     L.control.zoom({ position: 'bottomright' }).addTo(m);
     camada.current = L.layerGroup().addTo(m);
     mapa.current = m;
@@ -220,12 +231,14 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
     if (!m) return;
     camada.current.clearLayers();
     if (!itens.length) {
-      m.setView([-8.05, -34.9], 13);
+      m.setView([-3.689, -40.349], 13);
       return;
     }
     const pontos = itens.map((it) => [it.lat, it.lng]);
-    if (rota && pontos.length > 1) {
-      L.polyline(pontos, { color: '#87a3d4', weight: 3, dashArray: '6 8', opacity: 0.8 }).addTo(camada.current);
+    if (routePath.length > 1) {
+      L.polyline(routePath.map(({ lat, lng }) => [lat, lng]), { color: '#2053CE', weight: 5, opacity: 0.95 }).addTo(camada.current);
+    } else if (rota && pontos.length > 1) {
+      L.polyline(pontos, { color: '#2053CE', weight: 5, opacity: 0.95 }).addTo(camada.current);
     }
     itens.forEach((it) => {
       const icone = L.divIcon({
@@ -238,12 +251,16 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
         .on('click', () => aoTocar?.(it.id))
         .addTo(camada.current);
     });
-    const enquadrar = () => m.fitBounds(L.latLngBounds(pontos), { padding: [28, 28], maxZoom: 16 });
+    const enquadrar = () => {
+      const limites = L.latLngBounds(pontos);
+      if (routePath.length > 1) routePath.forEach(({ lat, lng }) => limites.extend([lat, lng]));
+      m.fitBounds(limites, { padding: [28, 28], maxZoom: 16 });
+    };
     enquadrar();
     // O mapa pode nascer num contêiner que ainda está ganhando tamanho: recalcula e reenquadra
     const t = setTimeout(() => { m.invalidateSize(); enquadrar(); }, 80);
     return () => clearTimeout(t);
-  }, [itens, rota, aoTocar]);
+  }, [itens, rota, routePath, aoTocar]);
 
   function minhaLocalizacao() {
     if (!navigator.geolocation) {
@@ -253,6 +270,7 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         const pos = [coords.latitude, coords.longitude];
+        onLocation?.({ lat: coords.latitude, lng: coords.longitude });
         if (eu.current) eu.current.setLatLng(pos);
         else
           eu.current = L.circleMarker(pos, {
@@ -270,11 +288,11 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
     <div className={`mapa ${classe}`}>
       <div ref={caixa} className="mapa-caixa" role="region" aria-label="Mapa dos estabelecimentos" />
       {localizar && (
-        <button className="btn-local" onClick={minhaLocalizacao}>Minha localização</button>
+        <button className="btn-local" aria-label="Centralizar na minha localização" onClick={minhaLocalizacao}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>
+        </button>
       )}
       {aviso && <p className="mapa-aviso">{aviso}</p>}
     </div>
   );
 }
-
-
