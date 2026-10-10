@@ -34,15 +34,12 @@ TIPOS = ["Padaria", "Lanchonete", "Restaurante", "Pizzaria", "Hamburgueria", "Ba
 BAIRROS = ["Centro", "Derby", "Junco", "Dom Expedito", "Campo dos Velhos", "Sumaré",
            "Alto da Brasília", "Pedrinhas", "Expectativa", "Padre Palhano", "Cohab II", "Terrenos Novos"]
 
-# Janela padrão de quem decide.
-# Validado em 2 de 2 entrevistas: negócios com estrutura administrativa atendem "antes do almoço";
-# à tarde fazem faturamento, notas, boletos e rotas.
+# Preferência geral observada em duas conversas: manhã / antes do almoço.
+# 9h–11h30 é apenas uma janela operacional provisória; confirmar o horário de cada lead.
 JANELA_VALIDADA = "9h–11h30"
-# Para MEI ainda é hipótese por tipo de negócio (nenhum pequeno negócio entrevistado).
-JANELAS = {
-    "Padaria": "14h–16h", "Lanchonete": "9h–11h", "Restaurante": "15h–17h",
-    "Pizzaria": "14h–17h", "Hamburgueria": "14h–17h", "Bar": "15h–17h", "Cafeteria": "10h–11h30",
-}
+# O mesmo padrão matinal é usado como sugestão inicial para todos os segmentos;
+# não inferimos horários diferentes pelo tipo do estabelecimento.
+JANELAS = {tipo: JANELA_VALIDADA for tipo in TIPOS}
 COMPRA_HOJE = ["Representante no WhatsApp", "Atacarejo (vai buscar)", "Distribuidor local",
                "Mercadinho do bairro", "Mistura de atacarejo e representante"]
 OBJECOES = ["prazo", "troca", "preco", "fornecedor", "app", "tempo"]
@@ -200,7 +197,7 @@ def simular_funil(est, i, rng):
         "pontos": pontos,
         "etapa": etapa,
         "janelaDono": JANELA_VALIDADA if porte != "MEI" else JANELAS.get(est["tipo"], JANELA_VALIDADA),
-        "janelaFonte": "entrevistas" if porte != "MEI" else "hipotese",
+        "janelaFonte": "referencia geral (2 conversas); confirmar" if porte != "MEI" else "hipotese",
         # Em estabelecimento real não inventamos nome de pessoa: só o papel, a confirmar na visita.
         "decisor": (f"{rng.choice(DECISORES)} (a confirmar)" if est.get("fonte") == "OpenStreetMap"
                     else f"{rng.choice(PRIMEIROS)} ({rng.choice(DECISORES).lower()})"),

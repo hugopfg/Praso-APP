@@ -17,14 +17,14 @@ export const OBJECOES = {
   prazo: {
     rotulo: 'Precisa de prazo para pagar',
     argumento:
-      'Para empresas de médio porte, prazo acima de 21 dias é condição (ouvido em entrevista). Chegue já sabendo as condições da Praso para esse perfil.',
+      'Um comprador entrevistado informou que precisa negociar prazo superior a 21 dias. Confira as condições comerciais disponíveis para este cliente antes de prometer qualquer prazo.',
     proximo: 'Retornar com as condições de pagamento',
     diasRetorno: 2,
   },
   troca: {
     rotulo: 'Medo de ruptura ou de não conseguir trocar',
     argumento:
-      'Combine que você confere a 1ª entrega junto com ele e resolve qualquer falta, avaria ou validade curta. Confirme antes a política de troca da Praso.',
+      'O comprador valoriza receber exatamente o que pediu e ter suporte se houver falta, extravio ou validade curta. Explique o processo de pós-venda e confirme a política de troca antes de garantir uma solução.',
     proximo: 'Acompanhar a 1ª entrega',
     diasRetorno: 3,
   },
@@ -38,21 +38,21 @@ export const OBJECOES = {
   fornecedor: {
     rotulo: 'Já tem fornecedor de confiança',
     argumento:
-      'Não peça para trocar. Ofereça a Praso para a compra de emergência, no lugar da ida ao atacarejo.',
-    proximo: 'Voltar no dia de reposição',
+      'Confiabilidade, pedido completo e pós-venda pesam na escolha. Entenda o que o fornecedor atual resolve bem e apresente como a Praso trata falhas e reposições, sem prometer o que não foi confirmado.',
+    proximo: 'Apresentar diferenciais de entrega e pós-venda',
     diasRetorno: 7,
   },
   app: {
     rotulo: 'Não confia em comprar por app',
     argumento:
-      'Faça o cadastro e o 1º pedido junto, no celular dele. Ajuda no primeiro pedido foi o que conquistou cliente em entrevista.',
+      'Ofereça ajuda no cadastro e no primeiro pedido. Mostre como pedir suporte se houver divergência, extravio ou validade curta; explique as condições reais de pós-venda e troca.',
     proximo: 'Visita para fazer o 1º pedido junto',
     diasRetorno: 2,
   },
   tempo: {
     rotulo: 'Sem tempo agora',
-    argumento: 'Volte antes do almoço, com o pedido já montado. À tarde o comprador costuma estar no administrativo.',
-    proximo: 'Voltar antes do almoço',
+    argumento: 'Combine uma nova conversa pela manhã. Os compradores ouvidos relataram que a tarde costuma ficar ocupada com tarefas administrativas.',
+    proximo: 'Voltar pela manhã, no horário combinado',
     diasRetorno: 1,
   },
 };
@@ -224,12 +224,12 @@ export function mensagemWhatsApp(e) {
   if (e.problemaEntrega)
     return `Oi, ${primeiro}! Aqui é o Hugo, da Praso. Já estou vendo o problema do seu primeiro pedido e te dou retorno hoje. Pode me mandar foto do que veio errado?`;
   if (acao.posEntrega)
-    return `Oi, ${primeiro}! Aqui é o Hugo, da Praso. Seu primeiro pedido chegou completo e com boa validade? Se faltou ou veio algo com problema, me fala que eu resolvo a troca.`;
+    return `Oi, ${primeiro}! Aqui é o Hugo, da Praso. Seu pedido chegou completo e com boa validade? Se houve alguma divergência, me conte para eu verificar o suporte e as opções de solução disponíveis.`;
   if (acao.texto.startsWith('Ajudar a finalizar'))
     return `Oi, ${primeiro}! Aqui é o Hugo, da Praso. Vi que ficou um pedido montado no app. Quer que eu te ajude a finalizar? Se tiver dúvida de preço ou entrega, me chama aqui.`;
   if (e.etapa === 'ativacao')
     return `Oi, ${primeiro}! Aqui é o Hugo, da Praso. Já está chegando a hora de repor os insumos da ${e.tipo.toLowerCase()}. Pelo app você pede em 2 minutos e recebe aí. Quer que eu te mande os itens do último pedido?`;
-  return `Oi, ${primeiro}! Aqui é o Hugo, da Praso. Posso passar aí essa semana para te mostrar os preços dos insumos que você mais usa?`;
+  return `Oi, ${primeiro}! Aqui é o Hugo, da Praso. Vi que você costuma fazer os pedidos por WhatsApp. Posso te ajudar por aqui e, se fizer sentido, mostrar como funciona o app e o suporte para pedidos?`;
 }
 
 export function linkWhatsApp(e) {

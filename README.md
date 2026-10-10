@@ -43,6 +43,12 @@ Ao final, a plataforma devolve o próximo passo já agendado, o argumento para a
 | Mapa real + navegação do celular | Usa locais cadastrados no OpenStreetMap e abre a rota no app de mapas | Distância e tempo estimados em linha reta; o app de mapas calcula as ruas |
 | Sem login nem servidor | Validar o fluxo com vendedores antes de integrar | Dados ficam só no aparelho |
 
+## Aprendizados de campo compartilhados
+
+Dois relatos indicam preferência por conversas pela manhã e compras frequentes por WhatsApp ou sistema de distribuidor. A tarde pode ficar ocupada com rotinas administrativas. O calendário de reposição varia por operação e por giro: semanal para itens recorrentes e produção, quinzenal/mensal para itens de menor giro. Compradores também destacaram pedido completo, confiabilidade e pós-venda; um deles relatou negociar prazo acima de 21 dias.
+
+Esses achados são uma amostra pequena, não regras universais. A faixa 9h–11h30 é usada apenas como sugestão inicial e precisa ser confirmada por lead. O fluxo recomenda confirmar condições de troca e prazo antes de apresentar qualquer promessa. Consulte `docs/playbook-campo.md` e `docs/diario-de-campo.md`.
+
 ## Dados
 
 Os nomes e as coordenadas da base atual vêm dos estabelecimentos com nome cadastrados no OpenStreetMap para Sobral (CE). A cobertura do mapa colaborativo pode estar incompleta, e cada registro inclui o link ao objeto de origem para conferência. O estado do funil (etapa, compras, visitas, sinais do app) continua simulado; não há dado da Praso aqui. Distância e tempo a pé são estimativas em linha reta calculadas a partir da localização do aparelho, não uma rota viária.
