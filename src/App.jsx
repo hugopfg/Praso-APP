@@ -7,7 +7,8 @@ import {
 import { aplicarCheckin, resultadosPorEtapa, JANELAS_OPCOES } from './lib/checkin.js';
 import Mapa from './Mapa.jsx';
 
-const CHAVE = 'praso-campo-v1';
+// Evita reaproveitar a base fictícia que possa estar salva no navegador.
+const CHAVE = 'praso-campo-v3-osm';
 const PONTOS_MES_BASE = 18.5;
 const META_MES = 30;
 
@@ -40,7 +41,7 @@ const rotuloTerritorio = () => {
 const territorio = () => {
   const t = base.territorio ? String(base.territorio).replace(/-/g, ' ') : '';
   return base.fonte === 'osm'
-    ? `Estabelecimentos reais${t && !t.includes(',') ? ` de ${t.replace(/\b\w/g, (c) => c.toUpperCase())},` : ''} ${base.cidade}, via OpenStreetMap. Etapas do funil, compras e histórico são simulados.`
+    ? `Estabelecimentos nomeados cadastrados no OpenStreetMap para ${base.cidade}. A cobertura pode estar incompleta; etapas, compras e histórico do funil são simulados.`
     : `Estabelecimentos e funil simulados para ${base.cidade}.`;
 };
 
@@ -443,6 +444,7 @@ function Detalhe({ e, fechar, iniciar, entrega }) {
       </div>
       <h1>{e.nome}</h1>
       <p className="sub">{e.tipo} no bairro {e.bairro}. {e.endereco}</p>
+      {e.osmId && <a className="fonte" href={`https://www.openstreetmap.org/${e.osmElemento}/${e.osmId}`} target="_blank" rel="noreferrer">Conferir este estabelecimento no OpenStreetMap</a>}
       <span className={`etapa etapa-${e.etapa}`}>{ETAPAS[e.etapa]}</span>
 
       <dl className="ficha">
@@ -632,7 +634,7 @@ function Sobre({ resetar, registros }) {
         <li>Sem login e sem servidor: os dados ficam neste aparelho. Suficiente para testar o fluxo com vendedores.</li>
       </ul>
       <h2>Dados</h2>
-      <p>{territorio()}</p>
+      <p>{territorio()}{base.fonte === 'osm' && <> Créditos: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>.</>}</p>
       {media !== null && <p className="ajuda">Nesta sessão: {checkins.length} visitas registradas, média de {media} s por registro.</p>}
       <button className="btn sec" onClick={resetar}>Recomeçar a demonstração</button>
     </article>

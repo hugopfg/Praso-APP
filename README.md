@@ -39,15 +39,14 @@ Ao final, a plataforma devolve o próximo passo já agendado, o argumento para a
 
 ## Dados
 
-Os dados são **simulados**: estabelecimentos fictícios em Sobral (CE) e todo o estado do funil
-(etapa, compras, visitas, sinais do app). Não há dado da Praso aqui.
+Os nomes e as coordenadas da base atual vêm dos estabelecimentos com nome cadastrados no OpenStreetMap para Sobral (CE). A cobertura do mapa colaborativo pode estar incompleta, e cada registro inclui o link ao objeto de origem para conferência. O estado do funil (etapa, compras, visitas, sinais do app) continua simulado; não há dado da Praso aqui.
 
 O script `scripts/gerar_dados.py` gera a base. Com `--fonte osm` ele troca os estabelecimentos fictícios
 por estabelecimentos reais do OpenStreetMap (Overpass API, gratuita e sem chave). O funil continua simulado.
 
 ```bash
-python scripts/gerar_dados.py                 # base fictícia
-python scripts/gerar_dados.py --fonte osm     # estabelecimentos reais de Sobral
+python scripts/gerar_dados.py                 # estabelecimentos do OpenStreetMap em Sobral
+python scripts/gerar_dados.py --fonte ficticia # base fictícia para testes
 python scripts/gerar_dados.py --fonte osm --cidade "Fortaleza"
 ```
 
@@ -87,3 +86,4 @@ scripts/gerar_dados.py
 - Calibrar os pesos de priorização com dados históricos por etapa do funil.
 - Visão do gestor: conversão por etapa e por vendedor, para entender o que os melhores fazem diferente.
 - Enriquecimento de leads com dados públicos de CNPJ (CNAE, porte, data de abertura) e Google Places.
+

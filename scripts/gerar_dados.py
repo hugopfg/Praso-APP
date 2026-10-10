@@ -2,8 +2,8 @@
 Gera a base do protótipo: estabelecimentos + estado do funil simulado.
 
 Duas fontes de estabelecimentos:
-  --fonte ficticia  (padrão) nomes e coordenadas inventados dentro de Sobral-CE.
-  --fonte osm       estabelecimentos reais de Sobral via OpenStreetMap (Overpass API, grátis, sem chave).
+  --fonte osm       (padrão) estabelecimentos reais de Sobral via OpenStreetMap (Overpass API, grátis, sem chave).
+  --fonte ficticia  nomes e coordenadas inventados, apenas para testes.
 
 O funil (status, compras, visitas, sinais do app) é SEMPRE simulado — não temos dados da Praso.
 Datas são gravadas como "dias atrás" para o protótipo sempre parecer atual.
@@ -20,6 +20,8 @@ from pathlib import Path
 
 SAIDA = Path(__file__).resolve().parent.parent / "src" / "data" / "estabelecimentos.json"
 CENTRO_SOBRAL = (-3.6880, -40.3497)
+# Relação OSM da área urbana de Sobral (nome + estado evita confundir com cidades homônimas).
+RELACOES_OSM_CIDADE = {"Sobral": 20595424}
 
 # Territórios prontos (sul, oeste, norte, leste). Aproximados: confira no mapa e ajuste.
 TERRITORIOS = {
@@ -56,7 +58,7 @@ def nome_ficticio(tipo, rng):
     return f"{tipo} {rng.choice(NOMES)}"
 
 
-def coletar_osm(cidade, bbox=None):
+def coletar_osm(cidade, bbox=None, estado="Ceará"):
     """Busca restaurantes/bares/cafés/lanchonetes/padarias reais no OpenStreetMap.
     Com bbox (sul, oeste, norte, leste) busca só dentro do território."""
     import urllib.parse
@@ -65,44 +67,100 @@ def coletar_osm(cidade, bbox=None):
     if bbox:
         filtro, cabeca = "({},{},{},{})".format(*bbox), ""
     else:
+        relacao = RELACOES_OSM_CIDADE.get(cidade)
+        if relacao is None:
+            # Resolve a cidade junto ao estado no Nominatim e usa sua relação exata;
+            # pesquisar só pelo nome pode devolver uma localidade homônima de outro país.
+            import urllib.parse
+            import urllib.request
+            params = urllib.parse.urlencode({"city": cidade, "state": estado, "country": "Brasil",
+                                             "format": "jsonv2", "limit": 10})
+            req = urllib.request.Request(
+                f"https://nominatim.openstreetmap.org/search?{params}",
+                headers={"User-Agent": "PrasoCampo/1.0"},
+            )
+            with urllib.request.urlopen(req, timeout=30) as r:
+                resultados = json.load(r)
+            candidatos = [x for x in resultados if x.get("osm_type") == "relation"
+                          and x.get("category") == "boundary" and x.get("type") == "administrative"]
+            if not candidatos:
+                raise RuntimeError(f"Não encontrei limite administrativo de {cidade}, {estado}, Brasil no OpenStreetMap.")
+            candidato = next((x for x in candidatos if x.get("addresstype") == "city"), candidatos[0])
+            relacao = candidato["osm_id"]
+        area_id = 3600000000 + int(relacao)
         filtro = "(area.a)"
-        cabeca = f'area["name"="{cidade}"]["boundary"="administrative"]["admin_level"="8"]->.a;'
+        cabeca = f"area({area_id})->.a;"
     consulta = f"""
     [out:json][timeout:90];
     {cabeca}
     (
-      nwr["amenity"~"^(restaurant|fast_food|cafe|bar|pub)$"]{filtro};
-      nwr["shop"~"^(bakery|pastry)$"]{filtro};
+      nwr["amenity"~"^(restaurant|fast_food|cafe|bar|pub|food_court|ice_cream|biergarten|canteen)$"]{filtro};
+      nwr["shop"~"^(bakery|pastry|confectionery|ice_cream|deli|butcher|cheese|coffee|dairy|food|greengrocer|supermarket|convenience|seafood|frozen_food|grocery)$"]{filtro};
     );
     out center tags;
     """
     dados = urllib.parse.urlencode({"data": consulta}).encode()
-    req = urllib.request.Request("https://overpass-api.de/api/interpreter", data=dados,
-                                 headers={"User-Agent": "praso-campo-prototipo"})
-    with urllib.request.urlopen(req, timeout=90) as r:
-        elementos = json.load(r)["elements"]
+    elementos = None
+    erros = []
+    # Overpass público pode devolver 504 em horários de pico; tenta espelhos oficiais.
+    for endpoint in (
+        "https://overpass.private.coffee/api/interpreter",
+        "https://overpass-api.de/api/interpreter",
+        "https://lz4.overpass-api.de/api/interpreter",
+    ):
+        req = urllib.request.Request(endpoint, data=dados,
+                                     headers={"User-Agent": "praso-campo-prototipo"})
+        try:
+            with urllib.request.urlopen(req, timeout=100) as r:
+                elementos = json.load(r)["elements"]
+            break
+        except Exception as e:
+            erros.append(f"{endpoint}: {e}")
+    if elementos is None:
+        raise RuntimeError("Não foi possível consultar a base pública do OpenStreetMap: " + " | ".join(erros))
 
-    mapa_tipo = {"restaurant": "Restaurante", "fast_food": "Lanchonete", "cafe": "Cafeteria",
-                 "bar": "Bar", "pub": "Bar"}
+    mapa_tipo = {
+        "restaurant": "Restaurante", "fast_food": "Lanchonete", "cafe": "Cafeteria",
+        "bar": "Bar", "pub": "Bar", "biergarten": "Bar", "food_court": "Praça de alimentação",
+        "ice_cream": "Sorveteria", "canteen": "Refeitório",
+    }
+    mapa_loja = {
+        "bakery": "Padaria", "pastry": "Confeitaria", "confectionery": "Doceria",
+        "ice_cream": "Sorveteria", "deli": "Empório", "butcher": "Açougue",
+        "cheese": "Laticínios", "coffee": "Café", "dairy": "Laticínios", "food": "Mercearia",
+        "greengrocer": "Hortifruti", "supermarket": "Mercado", "convenience": "Mercado",
+        "seafood": "Peixaria", "frozen_food": "Congelados", "grocery": "Mercearia",
+    }
     saida = []
     for e in elementos:
         tags = e.get("tags", {})
         nome = tags.get("name")
         if not nome:
             continue
+        # Alguns dados do OSM têm classificações conflitantes (por exemplo,
+        # uma barbearia marcada como bar). Não mostrar locais que não vendem comida.
+        if "barbearia" in nome.casefold() or tags.get("shop") in ("barber", "hairdresser"):
+            continue
         lat = e.get("lat") or e.get("center", {}).get("lat")
         lng = e.get("lon") or e.get("center", {}).get("lon")
         if lat is None:
             continue
-        if tags.get("shop") in ("bakery", "pastry"):
-            tipo = "Padaria"
-        elif "pizza" in tags.get("cuisine", ""):
+        nome_norm = nome.casefold()
+        cuisine = tags.get("cuisine", "").casefold()
+        if "sorvet" in nome_norm or "gelato" in nome_norm or "ice_cream" in cuisine:
+            tipo = "Sorveteria"
+        elif "pizza" in nome_norm or "pizza" in cuisine:
             tipo = "Pizzaria"
-        elif "burger" in tags.get("cuisine", ""):
+        elif "hamburg" in nome_norm or "burger" in nome_norm or "burger" in cuisine:
             tipo = "Hamburgueria"
+        elif "lanchonete" in nome_norm or "lanche" in nome_norm or "sanduiche" in nome_norm:
+            tipo = "Lanchonete"
+        elif tags.get("shop"):
+            tipo = mapa_loja.get(tags["shop"], "Mercearia")
         else:
             tipo = mapa_tipo.get(tags.get("amenity"), "Restaurante")
         saida.append({"nome": nome, "tipo": tipo, "lat": lat, "lng": lng,
+                      "osmId": e["id"], "osmElemento": e["type"],
                       "bairro": tags.get("addr:suburb") or tags.get("addr:neighbourhood") or "—",
                       "endereco": " ".join(filter(None, [tags.get("addr:street"), tags.get("addr:housenumber")])) or "Endereço não informado no OSM",
                       "fonte": "OpenStreetMap"})
@@ -141,7 +199,7 @@ def simular_funil(est, i, rng):
         "porte": porte,
         "pontos": pontos,
         "etapa": etapa,
-        "janelaDono": JANELA_VALIDADA if porte != "MEI" else JANELAS[est["tipo"]],
+        "janelaDono": JANELA_VALIDADA if porte != "MEI" else JANELAS.get(est["tipo"], JANELA_VALIDADA),
         "janelaFonte": "entrevistas" if porte != "MEI" else "hipotese",
         # Em estabelecimento real não inventamos nome de pessoa: só o papel, a confirmar na visita.
         "decisor": (f"{rng.choice(DECISORES)} (a confirmar)" if est.get("fonte") == "OpenStreetMap"
@@ -186,22 +244,23 @@ def simular_funil(est, i, rng):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--fonte", choices=["ficticia", "osm"], default="ficticia")
+    p.add_argument("--fonte", choices=["ficticia", "osm"], default="osm")
     p.add_argument("--cidade", default="Sobral")
+    p.add_argument("--estado", default="Ceará", help="estado brasileiro da cidade")
     p.add_argument("--n", type=int, default=60, help="quantidade (base fictícia)")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--territorio", choices=sorted(TERRITORIOS), help="recorte pronto (Recife)")
     p.add_argument("--bbox", help='recorte manual "sul,oeste,norte,leste"')
-    p.add_argument("--limite", type=int, default=80, help="máximo de estabelecimentos (OSM)")
+    p.add_argument("--limite", type=int, default=0, help="máximo opcional de estabelecimentos (OSM); 0 inclui todos")
     a = p.parse_args()
 
     rng = random.Random(a.seed)
     if a.fonte == "osm":
         bbox = TERRITORIOS.get(a.territorio) if a.territorio else (
             tuple(float(x) for x in a.bbox.split(",")) if a.bbox else None)
-        base = coletar_osm(a.cidade, bbox)
+        base = coletar_osm(a.cidade, bbox, a.estado)
         print(f"{len(base)} estabelecimentos com nome encontrados no OSM")
-        if len(base) > a.limite:
+        if a.limite > 0 and len(base) > a.limite:
             base = rng.sample(base, a.limite)
         rotulo = (a.territorio or a.cidade).replace("-", " ").title()
         for e in base:
@@ -225,3 +284,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
