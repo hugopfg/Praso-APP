@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "praso campo",
+  "short_name": "praso campo",
+  "description": "Ferramenta de campo para vendedores Praso",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EFF4FF",
+  "theme_color": "#123DA1",
+  "icons": [
+    {
+      "src": "/praso-campo-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
