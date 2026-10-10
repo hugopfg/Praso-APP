@@ -12,7 +12,7 @@ const ATRIB = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStre
 // Sem chave, ou se o Google recusar, o app usa o mapa alternativo (Leaflet + OpenStreetMap).
 const CHAVE_GOOGLE = import.meta.env.VITE_GOOGLE_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';
-const svgPino = (rotulo = '') => `<svg class="pin-svg" viewBox="0 0 44 54" aria-hidden="true" focusable="false"><path class="pin-forma" d="M22 2C10.95 2 2 10.95 2 22c0 14.2 20 30 20 30s20-15.8 20-30C42 10.95 33.05 2 22 2Z"/><circle class="pin-miolo" cx="22" cy="21" r="10.5"/><text class="pin-numero" x="22" y="25" text-anchor="middle">${rotulo || ''}</text></svg>`;
+const svgPino = (cor, rotulo = '') => `<svg class="pin-svg" viewBox="0 0 44 54" aria-hidden="true" focusable="false"><path d="M22 2C10.95 2 2 10.95 2 22c0 14.2 20 30 20 30s20-15.8 20-30C42 10.95 33.05 2 22 2Z" style="fill:${cor};stroke:#fff;stroke-width:2;stroke-linejoin:round"/><circle cx="22" cy="21" r="10.5" style="fill:#fff"/><text x="22" y="25" text-anchor="middle" style="fill:${cor};font:800 12px sans-serif">${rotulo || ''}</text></svg>`;
 
 // itens: [{ id, lat, lng, cor, rotulo, nome }]
 // rota: liga os pinos na ordem com linha tracejada
@@ -59,7 +59,7 @@ function elementoPino(it) {
     height: '54px',
     cursor: 'pointer',
   });
-  el.innerHTML = svgPino(it.rotulo);
+  el.innerHTML = svgPino(it.cor, it.rotulo);
   return el;
 }
 
@@ -219,7 +219,7 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
     itens.forEach((it) => {
       const icone = L.divIcon({
         className: '',
-        html: `<span class="pin${it.rotulo ? ' pin-rotulado' : ''}" style="--pin-color:${it.cor}">${svgPino(it.rotulo)}</span>`,
+        html: `<span class="pin${it.rotulo ? ' pin-rotulado' : ''}" style="--pin-color:${it.cor}">${svgPino(it.cor, it.rotulo)}</span>`,
         iconSize: [44, 54],
         iconAnchor: [22, 52],
       });
@@ -265,4 +265,5 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
     </div>
   );
 }
+
 
