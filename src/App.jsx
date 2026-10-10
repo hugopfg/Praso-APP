@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import mock from './data/mock.js';
 import {
-  ETAPAS, OBJECOES, PRAZO_RECORRENCIA, acaoSugerida,
+  ETAPAS, OBJECOES, PRAZO_RECORRENCIA, acaoSugerida, montarDia,
 } from './lib/regras.js';
 import { aplicarCheckin, resultadosPorEtapa, JANELAS_OPCOES } from './lib/checkin.js';
 import Mapa from './Mapa.jsx';
