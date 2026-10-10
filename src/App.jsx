@@ -102,7 +102,10 @@ export default function App() {
       <header className="marca">
         <div className="marca-faixa">Seu território: <strong>{rotuloTerritorio()}</strong></div>
         <div className="marca-barra">
-          <span className="marca-nome">praso<span>campo</span></span>
+          <span className="marca-nome">
+            <img className="marca-logo" src="/praso-logo.svg" alt="" />
+            <span className="marca-titulo">praso<span>campo</span></span>
+          </span>
           <span className="avatar" aria-label={`Vendedor: ${base.vendedor}`}>{base.vendedor.charAt(0)}</span>
         </div>
       </header>
@@ -634,3 +637,4 @@ function Sobre({ resetar, registros }) {
     </article>
   );
 }
+
