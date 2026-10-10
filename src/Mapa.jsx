@@ -12,7 +12,7 @@ const ATRIB = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStre
 // Sem chave, ou se o Google recusar, o app usa o mapa alternativo (Leaflet + OpenStreetMap).
 const CHAVE_GOOGLE = import.meta.env.VITE_GOOGLE_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';
-const ICONE_GARFO_FACA = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3v5.5M8 3v5.5M10 3v5.5M6 8.5h4M8 8.5V21M17.5 3c-1.8 2-2.5 4-2.5 6 0 1.4 1 2.5 2.5 2.5V21"/></svg>';
+const ICONE_LEAD = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="7" r="3.2"/><path d="M3 20v-1.2c0-3.2 2.3-5.4 6-5.4s6 2.2 6 5.4V20M18 6v6m-3-3h6"/></svg>';
 
 // itens: [{ id, lat, lng, cor, rotulo, nome }]
 // rota: liga os pinos na ordem com linha tracejada
@@ -61,7 +61,7 @@ function elementoPino(it) {
     transform: 'translateY(50%)',
     cursor: 'pointer',
   });
-  el.innerHTML = ICONE_GARFO_FACA;
+  el.innerHTML = ICONE_LEAD;
   if (numerado) {
     const ordem = document.createElement('span');
     ordem.className = 'pin-ordem';
@@ -123,7 +123,13 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
     const limites = new g.LatLngBounds();
     itens.forEach((it) => {
       const pos = { lat: it.lat, lng: it.lng };
-      const mk = new Marcador.current({ map: m, position: pos, content: elementoPino(it), title: it.nome });
+      const mk = new Marcador.current({
+        map: m,
+        position: pos,
+        content: elementoPino(it),
+        title: `${it.nome} — toque para ver detalhes`,
+        gmpClickable: true,
+      });
       mk.addEventListener('gmp-click', () => aoTocar?.(it.id));
       marcadores.current.push(mk);
       limites.extend(pos);
@@ -221,7 +227,7 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
     itens.forEach((it) => {
       const icone = L.divIcon({
         className: '',
-        html: `<span class="pin pin-restaurante${it.rotulo ? ' pin-rotulado' : ''}" style="background:${it.cor}">${ICONE_GARFO_FACA}${it.rotulo ? `<span class="pin-ordem">${it.rotulo}</span>` : ''}</span>`,
+        html: `<span class="pin pin-restaurante${it.rotulo ? ' pin-rotulado' : ''}" style="background:${it.cor}">${ICONE_LEAD}${it.rotulo ? `<span class="pin-ordem">${it.rotulo}</span>` : ''}</span>`,
         iconSize: [40, 40],
         iconAnchor: [20, 20],
       });
