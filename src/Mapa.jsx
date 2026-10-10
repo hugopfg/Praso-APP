@@ -12,7 +12,18 @@ const ATRIB = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStre
 // Sem chave, ou se o Google recusar, o app usa o mapa alternativo (Leaflet + OpenStreetMap).
 const CHAVE_GOOGLE = import.meta.env.VITE_GOOGLE_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';
-const svgPino = (cor, rotulo = '') => `<svg class="pin-svg" viewBox="0 0 44 54" aria-hidden="true" focusable="false"><path d="M22 2C10.95 2 2 10.95 2 22c0 14.2 20 30 20 30s20-15.8 20-30C42 10.95 33.05 2 22 2Z" style="fill:${cor};stroke:#fff;stroke-width:2;stroke-linejoin:round"/><circle cx="22" cy="21" r="10.5" style="fill:#fff"/><text x="22" y="25" text-anchor="middle" style="fill:${cor};font:800 12px sans-serif">${rotulo || ''}</text></svg>`;
+const glifoTipo = (tipo, cor) => {
+  const t = (tipo || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const estilo = `fill="none" stroke="${cor}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"`;
+  if (t.includes('padaria')) return `<path ${estilo} d="M14 20v-3a2 2 0 0 1 2-2h1v-2h3v2h2v-2h3v2h1a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H16a2 2 0 0 1-2-2Z"/><path ${estilo} d="M18 16v2m4-2v2"/>`;
+  if (t.includes('pizz')) return `<path ${estilo} d="m13 13 16 3-12 12-4-15Z"/><path ${estilo} d="m13 13 16 3M18 20h.01m4-1h.01m-2 5h.01"/><circle cx="18" cy="20" r="1" fill="${cor}"/><circle cx="22" cy="19" r="1" fill="${cor}"/>`;
+  if (t.includes('cafeter') || t.includes('cafe')) return `<path ${estilo} d="M14 16h12v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4v-5Zm12 2h2a2 2 0 0 1 0 4h-2M17 12c-1 1 1 1 0 2m5-2c-1 1 1 1 0 2"/>`;
+  if (t.includes('bar')) return `<path ${estilo} d="M15 13h14l-2 8a4 4 0 0 1-4 3h-2a4 4 0 0 1-4-3l-2-8Zm7 11v3m-4 0h8m-1-11h.01"/>`;
+  if (t.includes('hamburg')) return `<path ${estilo} d="M14 17a8 8 0 0 1 16 0H14Zm1 2h14m-13 3h12l-1 3H16l-1-3Zm4-8h.01m4-1h.01m3 2h.01"/>`;
+  // Restaurante e lanchonete usam o símbolo universal de refeição.
+  return `<path ${estilo} d="M16 12v7m-3-7v4a3 3 0 0 0 6 0v-4m-3 7v9m9-16v16m0-16c-2 2-3 5-3 8h3"/>`;
+};
+const svgPino = (cor, tipo, rotulo = '') => `<svg class="pin-svg" viewBox="0 0 44 54" aria-hidden="true" focusable="false"><path d="M22 2C10.95 2 2 10.95 2 22c0 14.2 20 30 20 30s20-15.8 20-30C42 10.95 33.05 2 22 2Z" style="fill:${cor};stroke:#fff;stroke-width:2;stroke-linejoin:round"/><circle cx="22" cy="21" r="10.5" style="fill:#fff"/>${rotulo ? `<circle cx="36" cy="8" r="7" fill="#fff"/><circle cx="36" cy="8" r="5.5" fill="${cor}"/><text x="36" y="10.5" text-anchor="middle" style="fill:#fff;font:800 7px sans-serif">${rotulo}</text>` : ''}<g>${glifoTipo(tipo, cor)}</g></svg>`;
 
 // itens: [{ id, lat, lng, cor, rotulo, nome }]
 // rota: liga os pinos na ordem com linha tracejada
@@ -59,7 +70,7 @@ function elementoPino(it) {
     height: '54px',
     cursor: 'pointer',
   });
-  el.innerHTML = svgPino(it.cor, it.rotulo);
+  el.innerHTML = svgPino(it.cor, it.tipo, it.rotulo);
   return el;
 }
 
@@ -219,7 +230,7 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
     itens.forEach((it) => {
       const icone = L.divIcon({
         className: '',
-        html: `<span class="pin${it.rotulo ? ' pin-rotulado' : ''}" style="--pin-color:${it.cor}">${svgPino(it.cor, it.rotulo)}</span>`,
+        html: `<span class="pin${it.rotulo ? ' pin-rotulado' : ''}" style="--pin-color:${it.cor}">${svgPino(it.cor, it.tipo, it.rotulo)}</span>`,
         iconSize: [44, 54],
         iconAnchor: [22, 52],
       });

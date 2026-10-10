@@ -167,7 +167,7 @@ function MeuDia({ estado, abrir, iniciar, mensagem }) {
   const pontosMes = PONTOS_MES_BASE + estado.pontosGanhos;
   const [foco, setFoco] = useState(null);
   const pinos = useMemo(
-    () => visitas.map(({ e }, i) => ({ id: e.id, lat: e.lat, lng: e.lng, nome: e.nome, cor: corDe(e), rotulo: i + 1 })),
+    () => visitas.map(({ e }, i) => ({ id: e.id, lat: e.lat, lng: e.lng, nome: e.nome, tipo: e.tipo, cor: corDe(e), rotulo: i + 1 })),
     [visitas]
   );
   const focar = useCallback((id) => {
@@ -291,7 +291,7 @@ function MapaCompleto({ estabelecimentos, abrir }) {
     [estabelecimentos, ativos]
   );
   const pinos = useMemo(
-    () => visiveis.map((e) => ({ id: e.id, lat: e.lat, lng: e.lng, nome: e.nome, cor: corDe(e) })),
+    () => visiveis.map((e) => ({ id: e.id, lat: e.lat, lng: e.lng, nome: e.nome, tipo: e.tipo, cor: corDe(e) })),
     [visiveis]
   );
   const aoTocar = useCallback((id) => setSel(id), []);
@@ -638,4 +638,5 @@ function Sobre({ resetar, registros }) {
     </article>
   );
 }
+
 
