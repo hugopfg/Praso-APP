@@ -12,6 +12,7 @@ const ATRIB = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStre
 // Sem chave, ou se o Google recusar, o app usa o mapa alternativo (Leaflet + OpenStreetMap).
 const CHAVE_GOOGLE = import.meta.env.VITE_GOOGLE_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';
+const ICONE_GARFO_FACA = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3v5.5M8 3v5.5M10 3v5.5M6 8.5h4M8 8.5V21M17.5 3c-1.8 2-2.5 4-2.5 6 0 1.4 1 2.5 2.5 2.5V21"/></svg>';
 
 // itens: [{ id, lat, lng, cor, rotulo, nome }]
 // rota: liga os pinos na ordem com linha tracejada
@@ -51,12 +52,19 @@ function carregarGoogle(chave) {
 
 function elementoPino(it) {
   const el = document.createElement('span');
-  el.className = `pin${it.rotulo ? ' pin-num' : ''}`;
-  const tam = it.rotulo ? 28 : 18;
+  const numerado = Boolean(it.rotulo);
+  el.className = `pin pin-restaurante${numerado ? ' pin-rotulado' : ''}`;
+  const tam = 40;
   Object.assign(el.style, {
     background: it.cor, width: `${tam}px`, height: `${tam}px`, transform: 'translateY(50%)', cursor: 'pointer',
   });
-  el.textContent = it.rotulo ?? '';
+  el.innerHTML = ICONE_GARFO_FACA;
+  if (numerado) {
+    const ordem = document.createElement('span');
+    ordem.className = 'pin-ordem';
+    ordem.textContent = it.rotulo;
+    el.append(ordem);
+  }
   return el;
 }
 
@@ -85,12 +93,13 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
           center: { lat: -8.05, lng: -34.9 },
           zoom: 13,
           mapId: MAP_ID,
+          backgroundColor: '#ffffff',
           disableDefaultUI: true,
           zoomControl: true,
           clickableIcons: false,
           // No mapa embutido na lista, um dedo rola a página; no mapa de tela cheia, move o mapa
           gestureHandling: localizar ? 'greedy' : 'cooperative',
-          colorScheme: 'FOLLOW_SYSTEM',
+          colorScheme: 'LIGHT',
         });
         setPronto(true);
       })
@@ -112,7 +121,7 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
     itens.forEach((it) => {
       const pos = { lat: it.lat, lng: it.lng };
       const mk = new Marcador.current({ map: m, position: pos, content: elementoPino(it), title: it.nome });
-      mk.addListener('click', () => aoTocar?.(it.id));
+      mk.addEventListener('gmp-click', () => aoTocar?.(it.id));
       marcadores.current.push(mk);
       limites.extend(pos);
     });
@@ -123,7 +132,7 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
         path: itens.map((it) => ({ lat: it.lat, lng: it.lng })),
         strokeOpacity: 0,
         icons: [{
-          icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.9, strokeColor: '#3d6ef0', scale: 3 },
+          icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.9, strokeColor: '#87a3d4', scale: 3 },
           offset: '0',
           repeat: '14px',
         }],
@@ -204,14 +213,14 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
     }
     const pontos = itens.map((it) => [it.lat, it.lng]);
     if (rota && pontos.length > 1) {
-      L.polyline(pontos, { color: '#3d6ef0', weight: 3, dashArray: '6 8', opacity: 0.8 }).addTo(camada.current);
+      L.polyline(pontos, { color: '#87a3d4', weight: 3, dashArray: '6 8', opacity: 0.8 }).addTo(camada.current);
     }
     itens.forEach((it) => {
       const icone = L.divIcon({
         className: '',
-        html: `<span class="pin${it.rotulo ? ' pin-num' : ''}" style="background:${it.cor}">${it.rotulo ?? ''}</span>`,
-        iconSize: it.rotulo ? [28, 28] : [18, 18],
-        iconAnchor: it.rotulo ? [14, 14] : [9, 9],
+        html: `<span class="pin pin-restaurante${it.rotulo ? ' pin-rotulado' : ''}" style="background:${it.cor}">${ICONE_GARFO_FACA}${it.rotulo ? `<span class="pin-ordem">${it.rotulo}</span>` : ''}</span>`,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
       });
       L.marker([it.lat, it.lng], { icon: icone, keyboard: true, title: it.nome })
         .on('click', () => aoTocar?.(it.id))
@@ -235,7 +244,7 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
         if (eu.current) eu.current.setLatLng(pos);
         else
           eu.current = L.circleMarker(pos, {
-            radius: 8, color: '#ffffff', weight: 3, fillColor: '#2563eb', fillOpacity: 1,
+            radius: 8, color: '#ffffff', weight: 3, fillColor: '#6386c8', fillOpacity: 1,
           }).addTo(mapa.current);
         mapa.current.setView(pos, 15);
         setAviso('');
