@@ -13,6 +13,12 @@ e um **registro de visita em até 3 toques que devolve o próximo passo**.
 - Lista "Resolver pelo WhatsApp": lembretes de recompra e carrinhos abertos, com mensagem pronta em um toque.
 - Retornos já agendados pelos registros anteriores.
 
+**Navegação mobile**
+- Quatro rotas diretas: `/`, `/mapa`, `/ativacao` e `/sobre`, com fallback configurado para a SPA na Vercel.
+- Layout otimizado para uso com uma mão, largura de até 430px, área segura do iPhone e botões de toque grandes.
+- Manifesto e service worker para instalar o app e reabrir a interface já carregada sem conexão.
+- Contratos JSDoc em `src/data/model.js` e mock adaptador em `src/data/mock.js`, prontos para a futura integração com API.
+
 **Registrar visita (check-in)**
 1. Conseguiu falar com quem decide? (sim / não estava / fechado)
 2. Se não estava: quando ele costuma estar? (o horário fica salvo para a equipe)
@@ -34,12 +40,14 @@ Ao final, a plataforma devolve o próximo passo já agendado, o argumento para a
 | Escolher por valor, ordenar por horário | Chegar quando o dono está aumenta a "visita efetiva" e o "tomador de decisão presente" | A rota pode cruzar a cidade entre janelas |
 | Registro em até 3 toques, sempre com retorno | A principal queixa é que registrar não devolve nada | Menos detalhe por visita (sem texto livre) |
 | Prioridade explicada em cada item | Vendedor confia no que entende e pode discordar | Pesos simples, não um modelo estatístico |
-| Mapa esquemático + navegação no Google Maps | Mostra a ordem da rota e carrega rápido no 4G | Não substitui um mapa completo |
+| Mapa real + navegação do celular | Usa locais cadastrados no OpenStreetMap e abre a rota no app de mapas | Distância e tempo estimados em linha reta; o app de mapas calcula as ruas |
 | Sem login nem servidor | Validar o fluxo com vendedores antes de integrar | Dados ficam só no aparelho |
 
 ## Dados
 
-Os nomes e as coordenadas da base atual vêm dos estabelecimentos com nome cadastrados no OpenStreetMap para Sobral (CE). A cobertura do mapa colaborativo pode estar incompleta, e cada registro inclui o link ao objeto de origem para conferência. O estado do funil (etapa, compras, visitas, sinais do app) continua simulado; não há dado da Praso aqui.
+Os nomes e as coordenadas da base atual vêm dos estabelecimentos com nome cadastrados no OpenStreetMap para Sobral (CE). A cobertura do mapa colaborativo pode estar incompleta, e cada registro inclui o link ao objeto de origem para conferência. O estado do funil (etapa, compras, visitas, sinais do app) continua simulado; não há dado da Praso aqui. Distância e tempo a pé são estimativas em linha reta calculadas a partir da localização do aparelho, não uma rota viária.
+
+As visitas, observações e fotos são guardadas no armazenamento local do aparelho. A interface mantém uma fila local; a sincronização automática só poderá ser ligada depois que existir uma API de visitas. O protótipo ainda não tem servidor.
 
 O script `scripts/gerar_dados.py` gera a base. Com `--fonte osm` ele troca os estabelecimentos fictícios
 por estabelecimentos reais do OpenStreetMap (Overpass API, gratuita e sem chave). O funil continua simulado.
@@ -86,4 +94,3 @@ scripts/gerar_dados.py
 - Calibrar os pesos de priorização com dados históricos por etapa do funil.
 - Visão do gestor: conversão por etapa e por vendedor, para entender o que os melhores fazem diferente.
 - Enriquecimento de leads com dados públicos de CNPJ (CNAE, porte, data de abertura) e Google Places.
-
