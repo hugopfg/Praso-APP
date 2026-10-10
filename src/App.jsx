@@ -106,7 +106,7 @@ export default function App() {
       ...old, pontosGanhos: old.pontosGanhos + gained, registros: [...old.registros, { id: client.id, tipo: 'checkin', seg: 0, visitaId: visit.id }],
       filaSincronizacao: [...(old.filaSincronizacao || []), visit], estabelecimentos: old.estabelecimentos.map((x) => x.id === client.id ? novo : x),
     }));
-    setCheckinId(null); setSelected(null); setNotice(navigator.onLine ? `${dev.titulo}. Visita salva neste aparelho.` : 'Visita salva offline. Será enviada quando a conexão voltar.');
+    setCheckinId(null); setSelected(null); setNotice(navigator.onLine ? `${dev.titulo}. Visita salva neste aparelho.` : 'Visita salva offline neste aparelho. Não há envio automático configurado.');
   }
 
   function resetDemo() {
