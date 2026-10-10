@@ -12,7 +12,7 @@ const ATRIB = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStre
 // Sem chave, ou se o Google recusar, o app usa o mapa alternativo (Leaflet + OpenStreetMap).
 const CHAVE_GOOGLE = import.meta.env.VITE_GOOGLE_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';
-const ICONE_LEAD = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="7" r="3.2"/><path d="M3 20v-1.2c0-3.2 2.3-5.4 6-5.4s6 2.2 6 5.4V20M18 6v6m-3-3h6"/></svg>';
+const svgPino = (rotulo = '') => `<svg class="pin-svg" viewBox="0 0 44 54" aria-hidden="true" focusable="false"><path class="pin-forma" d="M22 2C10.95 2 2 10.95 2 22c0 14.2 20 30 20 30s20-15.8 20-30C42 10.95 33.05 2 22 2Z"/><circle class="pin-miolo" cx="22" cy="21" r="10.5"/><text class="pin-numero" x="22" y="25" text-anchor="middle">${rotulo || ''}</text></svg>`;
 
 // itens: [{ id, lat, lng, cor, rotulo, nome }]
 // rota: liga os pinos na ordem com linha tracejada
@@ -52,22 +52,14 @@ function carregarGoogle(chave) {
 
 function elementoPino(it) {
   const el = document.createElement('span');
-  const numerado = Boolean(it.rotulo);
-  el.className = `pin pin-restaurante${numerado ? ' pin-rotulado' : ''}`;
+  el.className = `pin${it.rotulo ? ' pin-rotulado' : ''}`;
   Object.assign(el.style, {
-    background: it.cor,
-    width: '40px',
-    height: '40px',
-    transform: 'translateY(50%)',
+    '--pin-color': it.cor,
+    width: '44px',
+    height: '54px',
     cursor: 'pointer',
   });
-  el.innerHTML = ICONE_LEAD;
-  if (numerado) {
-    const ordem = document.createElement('span');
-    ordem.className = 'pin-ordem';
-    ordem.textContent = it.rotulo;
-    el.append(ordem);
-  }
+  el.innerHTML = svgPino(it.rotulo);
   return el;
 }
 
@@ -227,9 +219,9 @@ function MapaLeaflet({ itens, rota = false, aoTocar, classe = '', localizar = fa
     itens.forEach((it) => {
       const icone = L.divIcon({
         className: '',
-        html: `<span class="pin pin-restaurante${it.rotulo ? ' pin-rotulado' : ''}" style="background:${it.cor}">${ICONE_LEAD}${it.rotulo ? `<span class="pin-ordem">${it.rotulo}</span>` : ''}</span>`,
-        iconSize: [40, 40],
-        iconAnchor: [20, 20],
+        html: `<span class="pin${it.rotulo ? ' pin-rotulado' : ''}" style="--pin-color:${it.cor}">${svgPino(it.rotulo)}</span>`,
+        iconSize: [44, 54],
+        iconAnchor: [22, 52],
       });
       L.marker([it.lat, it.lng], { icon: icone, keyboard: true, title: it.nome })
         .on('click', () => aoTocar?.(it.id))

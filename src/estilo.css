@@ -248,16 +248,12 @@ h2 { font-size: 1.15rem; margin-bottom: 2px; }
 .mapa-rota { height: 42vh; min-height: 240px; max-height: 420px; }
 .mapa .leaflet-container { font-family: var(--font); background: #fff; }
 .pin {
-  display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%;
-  border: 2px solid #fff; box-shadow: 0 2px 7px rgba(46, 64, 91, 0.18);
+  display: block; width: 44px; height: 54px; filter: drop-shadow(0 2px 3px rgba(46, 64, 91, .28));
 }
-.pin-restaurante { padding: 0; position: relative; }
-.pin-restaurante svg { width: 24px; height: 24px; display: block; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.pin-ordem {
-  position: absolute; top: -5px; right: -5px; display: grid; place-items: center;
-  width: 17px; height: 17px; border: 2px solid #fff; border-radius: 50%;
-  background: #fff; color: #58677d; font: 700 9px/1 var(--font); box-shadow: 0 1px 4px rgba(46, 64, 91, .2);
-}
+.pin-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.pin-forma { fill: var(--pin-color); stroke: #fff; stroke-width: 2; stroke-linejoin: round; }
+.pin-miolo { fill: #fff; stroke: rgba(255, 255, 255, .9); stroke-width: 1; }
+.pin-numero { fill: var(--pin-color); font: 800 12px/1 var(--font); }
 .btn-local {
   position: absolute; top: 10px; right: 10px; z-index: 500; min-height: 40px; padding: 0 12px;
   background: var(--surface); color: var(--ink); border: 1.5px solid var(--line); border-radius: var(--radius-s);
@@ -286,7 +282,13 @@ h2 { font-size: 1.15rem; margin-bottom: 2px; }
   border-radius: var(--radius-m); padding: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
   display: flex; flex-direction: column; gap: 4px; animation: entra 0.18s ease-out;
 }
+.selecionado .cartao-cab { padding-right: 36px; }
 .botoes-sel { display: flex; gap: 8px; margin-top: 10px; }
+.botoes-sel > * { flex: 1; justify-content: center; text-align: center; text-decoration: none; }
+.fechar-selecionado {
+  position: absolute; top: 8px; right: 10px; width: 32px; height: 32px; border: 0; border-radius: 50%;
+  background: var(--surface-soft, #f2f5fa); color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer;
+}
 
 /* Pós-venda da 1ª entrega e origem dos dados */
 .botoes-entrega { display: flex; gap: 8px; margin-top: 10px; }

@@ -327,9 +327,10 @@ function MapaCompleto({ estabelecimentos, abrir }) {
           <span className="sub">{e.tipo} no bairro {e.bairro}, dono costuma estar {e.janelaDono}</span>
           <span className="acao">{acaoSugerida(e).texto}</span>
           <div className="botoes-sel">
-            <button className="btn sec" onClick={() => setSel(null)}>Fechar</button>
-            <button className="btn" onClick={() => abrir(e.id)}>Ver detalhes</button>
+            <button className="btn sec" onClick={() => abrir(e.id)}>Ver cliente</button>
+            <a className="btn" href={linkRota(e)} target="_blank" rel="noreferrer">Ir até lá</a>
           </div>
+          <button className="fechar-selecionado" onClick={() => setSel(null)} aria-label="Fechar cartão do cliente">×</button>
         </div>
       )}
     </div>
