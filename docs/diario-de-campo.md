@@ -1,46 +1,69 @@
-# Praso Campo — diário de pesquisa
+# Praso Campo — diário de bordo do case
 
-## Registro
+## Contexto da pesquisa
 
-- **Conversas recebidas:** 2 relatos de compradores/responsáveis por compras.
-- **Data, cidade e formato:** não informados no material recebido.
-- **Observação presencial:** não relatada; este documento registra somente as conversas compartilhadas.
-- **Privacidade:** participantes e estabelecimentos não identificados.
+Não fiz visitas presenciais. Por falta de tempo para me deslocar até os estabelecimentos, pesquisei e conversei com participantes por telefone. Assim, não apresento essas conversas como visitas de campo.
 
-## Atividades e evidências disponíveis
+Para preservar a confidencialidade, os nomes dos estabelecimentos e das pessoas não aparecem neste diário nem devem ser incluídos na versão compartilhada do case. Os participantes são identificados apenas pelo perfil necessário para contextualizar os aprendizados.
 
-- **Pesquisa recebida:** duas conversas com responsáveis por compras, compartilhadas pelo candidato. Os relatos foram organizados por perfil, disponibilidade, canal, frequência de compra e critérios de confiança.
-- **Visitas presenciais realizadas:** não há visita presencial descrita nos dados recebidos; não atribuo endereço ou nome fictício às conversas.
-- **Horas por parte do case:** não informadas. Não foram fornecidos apontamentos de tempo para pesquisa, protótipo, playbook ou diário.
-- **Partes do protótipo que agradaram:** não houve avaliação do protótipo nas conversas recebidas. Os entrevistados valorizaram confiabilidade, pedido completo, pós-venda, suporte no cadastro e no primeiro pedido; isso é critério de compra, não aprovação de uma tela ou funcionalidade do app.
+| Registro | Perfil anonimizado | Método | Tempo |
+|---|---|---|---:|
+| Entrevista 1 | Funcionário de uma padaria, responsável por compras de várias unidades e de uma operação de produção | Pesquisa online e conversa por telefone | 30 min |
+| Entrevista 2 | Pessoa ligada às compras de uma fábrica de pães | Conversa por telefone | 30 min |
 
-Essas lacunas são mantidas explícitas para não apresentar entrevistas remotas como visitas nem inferir horas ou feedback que não foram registrados.
+**Tempo de pesquisa: 1 hora de entrevistas. Tempo total aproximado dedicado ao case: 3 dias.** Não foi feito apontamento separado de horas por etapa. As datas e cidades das conversas não foram registradas.
 
-## Relato 1 — responsável por três lojas e uma indústria
+## O que ouvi
 
-A mesma pessoa cuida das compras de três lojas e de uma operação industrial. Prefere conversar com vendedores pela manhã e deixa a tarde para tarefas administrativas. Compra principalmente por WhatsApp, às vezes diretamente com o vendedor e recorre ao atacarejo em último caso.
+### Entrevista 1 — padaria
 
-Nas lojas, itens de maior giro (como leite, ovos, queijo e presunto) são comprados semanalmente; produtos de menor giro podem seguir ciclos quinzenais ou mensais. Na indústria, as compras acompanham a programação semanal de produção e precisam abastecer o ciclo seguinte.
+A pessoa entrevistada cuida das compras de três lojas e de uma operação industrial. Prefere falar com vendedores pela manhã e reserva a tarde para tarefas administrativas. Compra principalmente pelo WhatsApp, às vezes diretamente com vendedores e recorre ao atacarejo em último caso.
 
-Demonstraria confiança em um app se pudesse contar com suporte para extravio ou produto perto do vencimento e segurança de que existe uma forma de resolver o problema/trocar o produto. Confiabilidade, preço e pós-venda influenciam a escolha do fornecedor.
+Nas lojas, itens de maior giro — por exemplo, leite, ovos, queijo e presunto — são comprados semanalmente; produtos de menor giro podem seguir ciclos quinzenais ou mensais. Na operação industrial, as compras acompanham a programação semanal de produção e abastecem o ciclo seguinte.
 
-## Relato 2 — comprador ligado à coordenação administrativa
+Para confiar em um app, a pessoa espera suporte se houver extravio ou produto perto do vencimento, e segurança de que haverá um processo para resolver o problema. Confiabilidade, preço e pós-venda influenciam a escolha do fornecedor.
 
-As compras são feitas pelo WhatsApp ou pelo sistema próprio da distribuidora. Vendedores aparecem aproximadamente duas vezes por mês; o período antes do almoço é preferível, enquanto à tarde há faturamento, notas fiscais, boletos e montagem de rotas.
+### Entrevista 2 — fábrica de pães
 
-Para continuar com um fornecedor, o comprador destacou evitar rupturas e receber exatamente o que foi pedido. Também valorizou o atendimento inicial, ajuda no cadastro e no primeiro pedido pelo app. A empresa pede prazo de pagamento superior a 21 dias e negocia essa condição com fornecedores.
+As compras são feitas por WhatsApp ou pelo sistema próprio da distribuidora. Vendedores aparecem aproximadamente duas vezes por mês. O período antes do almoço é preferível; à tarde, a equipe fica ocupada com faturamento, notas fiscais, boletos e montagem de rotas.
 
-## Padrões e implicações para o produto
+Para continuar com um fornecedor, a pessoa destacou evitar rupturas e receber exatamente o que foi pedido. Também valorizou o atendimento inicial e a ajuda no cadastro e no primeiro pedido pelo app. Relatou que a empresa busca negociar prazo superior a 21 dias.
 
-1. **Janela:** priorizar tentativas pela manhã, mas perguntar o horário específico; a informação recebida não define uma faixa exata comum a todos.
-2. **Canal:** WhatsApp e sistemas de distribuidoras já são convenientes. O app precisa demonstrar agilidade e apoio, sem presumir que a visita ou o app serão o canal preferido.
-3. **Pós-venda:** deixar visível como pedir ajuda e acompanhar divergências de pedido. Não prometer troca, prazo ou cobertura antes de confirmar a política vigente.
-4. **Calendário:** lembretes precisam respeitar a frequência por produto e por operação. A produção industrial tem um ciclo próprio, ligado ao planejamento semanal.
-5. **Cadastro e primeiro pedido:** oferecer ajuda inicial pode reduzir a barreira de adoção; depois, diferenciar pedido assistido de compra autônoma.
-6. **Confiança:** completar o pedido corretamente e fechar o retorno de qualquer problema são partes do valor percebido, junto com preço.
+## Como organizei o case
 
-## Limitações e próxima coleta
+1. Li o briefing e separei os entregáveis: pesquisa, proposta da plataforma, protótipo funcional e playbook.
+2. Como não havia tempo para ir aos estabelecimentos, fiz a pesquisa por telefone. Reservei 30 minutos para cada conversa e mantive os relatos separados por perfil.
+3. Organizei as respostas por decisor, disponibilidade, canal de compra, frequência e fatores de confiança. Tratei os relatos como sinais de uma amostra pequena, sem generalizá-los para todos os clientes.
+4. Usei esses sinais e o funil descrito no case para orientar prioridades do protótipo: preparar visitas, registrar interações com poucos passos e acompanhar o cliente até a terceira compra autônoma.
+5. Documentei o fluxo de trabalho no playbook e registrei neste diário o método, os aprendizados e as limitações da pesquisa.
 
-A amostra é pequena e não informa data, cidade, porte formal, segmento específico de cada operação, valores de pedido ou observação direta em campo. Uma das conversas representa compras de várias lojas e indústria, então suas rotinas não devem ser generalizadas para um estabelecimento independente. O prazo superior a 21 dias é uma necessidade relatada por um participante, não uma condição universal.
+## Tempo dedicado por parte
 
-Na próxima rodada, registrar data/território, papel do entrevistado, segmento, quantidade de unidades, canal e frequência por categoria, janela exata disponível, pedidos incompletos recentes, como a troca foi resolvida e quais eventos definem pedido assistido e autônomo. Validar também se o prazo desejado é viável por perfil de cliente.
+| Parte | Tempo registrado |
+|---|---:|
+| Entrevistas (2 conversas) | 1 hora no total (30 min cada) |
+| Síntese da pesquisa e análise | Sem divisão de tempo registrada |
+| Decisões de produto e desenho do fluxo | Sem divisão de tempo registrada |
+| Implementação e ajustes do protótipo | Sem divisão de tempo registrada |
+| Playbook e diário | Sem divisão de tempo registrada |
+| **Total aproximado do case** | **3 dias** |
+
+O total de três dias é uma estimativa geral informada pelo autor; não há registro confiável que permita dividir esse período entre as etapas. A hora das entrevistas está incluída no trabalho de pesquisa, não deve ser somada novamente ao total.
+
+## Reflexão sobre o trabalho
+
+**Parte do case de que mais gostei:** gostei de todo o processo — entender como o fluxo funcionava, identificar os gargalos e, principalmente, desenvolver a aplicação e trabalhar na parte técnica. Construir o software foi o ponto de maior interesse para mim.
+
+## Aprendizados e implicações para o produto
+
+- **Janela de contato:** as duas pessoas preferem conversar antes ou durante a manhã. A plataforma pode ajudar a registrar o horário de cada decisor, mas o vendedor deve confirmar a janela específica.
+- **Canal:** WhatsApp e sistemas de distribuidoras já são convenientes. O app precisa mostrar apoio e agilidade sem presumir que será o canal preferido de todos.
+- **Calendário:** a reposição varia por produto e operação. Itens de maior giro podem ser semanais; itens de menor giro podem ser quinzenais ou mensais. A produção industrial segue planejamento próprio.
+- **Confiança:** pedido completo, confiabilidade e pós-venda apareceram nos relatos. O produto deve facilitar acompanhamento e encaminhamento de problemas, sem prometer troca ou prazo antes da confirmação das políticas oficiais.
+- **Ativação:** ajuda no cadastro e no primeiro pedido pode reduzir barreiras. Depois, é importante distinguir pedido assistido da compra feita com autonomia pelo cliente.
+
+## Limitações
+
+Foram duas conversas por telefone, totalizando uma hora de coleta, dentro de aproximadamente três dias dedicados ao case. Não houve visita presencial nem teste do protótipo com os participantes. A amostra é pequena e uma entrevista representa compras de várias unidades e uma operação de produção; portanto, os padrões não descrevem necessariamente um estabelecimento independente. Não foram registradas datas ou cidades, nem a divisão de tempo entre as demais etapas do case.
+
+Os nomes das empresas e dos participantes são confidenciais e foram omitidos. Antes de compartilhar o case, manter a anonimização e não acrescentar endereço ou detalhe que permita identificá-los. Validar os aprendizados com mais estabelecimentos e vendedores seria um próximo passo, fora do que foi possível realizar nesta pesquisa.

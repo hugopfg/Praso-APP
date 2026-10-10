@@ -1,5 +1,15 @@
 # Praso Campo: protótipo da plataforma do vendedor de campo
 
+## Entrega do case
+
+- **Protótipo publicado:** [Abrir Praso Campo](https://praso-campo.vercel.app/). Interface mobile-first; pode ser aberta no navegador do celular.
+- **Repositório:** [hugopfg/Praso-APP](https://github.com/hugopfg/Praso-APP).
+- **Playbook — um dia na vida do vendedor:** [Ler playbook](docs/playbook-campo.md).
+- **Diário de bordo e pesquisa:** [Ler diário](docs/diario-de-campo.md).
+- **Decisões de produto e trade-offs:** [Ver decisões](#decisões-de-produto-e-trade-offs).
+
+Este repositório reúne os entregáveis em um único link. O protótipo é uma demonstração funcional: carteira, etapas de clientes e eventos de compra são simulados e não estão conectados ao CRM ou a pedidos reais.
+
 Protótipo funcional, feito para celular, da plataforma de campo da Praso.
 Cobre a parte que mais mexe na conversão: **o dia do vendedor organizado em torno da recorrência**
 e um **registro de visita em até 3 toques que devolve o próximo passo**.

@@ -1,89 +1,79 @@
-# Praso Campo — playbook de visita
+# Praso Campo — playbook: um dia na vida do vendedor
 
 ## Objetivo
 
-Levar cada estabelecimento da primeira conversa até uma terceira compra feita com autonomia, acompanhando o cliente por até 45 dias. O cadastro é um marco intermediário: sucesso significa que o cliente compra, recebe o pedido corretamente e passa a confiar no canal.
+Organizar o trabalho do vendedor desde a preparação da rota até o fechamento do expediente. A plataforma deve reduzir o tempo gasto procurando informações e preenchendo registros, e devolver um próximo passo claro após cada interação.
 
-Este playbook transforma duas conversas de pesquisa em orientações iniciais. Elas apontam padrões, não regras universais. O vendedor deve confirmar decisor, janela de atendimento, frequência de compra e condições comerciais em cada conta.
+O funil considerado neste case tem seis etapas: visita planejada, visita efetiva, identificação do tomador de decisão, cadastro, primeira compra e terceira compra autônoma. O marco de recorrência definido no enunciado é a terceira compra feita pelo cliente sem ajuda no app, em até 45 dias. Cadastro e pedidos assistidos são avanços, mas não concluem esse marco.
 
-## As seis etapas do funil no trabalho de campo
+As recomendações partem de duas entrevistas telefônicas de pesquisa, realizadas em 30 minutos cada. Não houve visita presencial aos estabelecimentos, por falta de tempo para ir até eles. Os relatos são uma amostra pequena e não devem ser tratados como regra para todos os clientes. Nomes de empresas e pessoas foram omitidos para preservar a confidencialidade.
 
-| Etapa | O vendedor faz para converter | A plataforma apoia com |
-|---|---|---|
-| Visita planejada | Escolhe os pontos prioritários e combina retornos. | Fila do dia com motivo da prioridade, janela conhecida e rota no mapa. |
-| Visita efetiva | Confirma que o estabelecimento está aberto e registra o resultado. | Check-in curto; quando o local está fechado, agenda nova tentativa. |
-| Tomador de decisão | Identifica quem compra e confirma quando essa pessoa está disponível. | Registro de ausência e janela para orientar a próxima visita. |
-| Cadastro no app | Ajuda o decisor a concluir o cadastro, sem encerrar o trabalho nessa conversão. | Acompanha a conta em ativação e mantém o prazo da recorrência visível. |
-| Primeira compra | Apoia o primeiro pedido, confere os itens e combina a checagem da entrega. | Registra pedido assistido e sugere o acompanhamento pós-entrega. |
-| Terceira compra autônoma | Acompanha as compras seguintes e ajuda o cliente a comprar sozinho no app. | Distingue pedido assistido de autônomo e sinaliza o limite de 45 dias. |
+## Um dia de trabalho
 
-O marco de sucesso do case é a terceira compra autônoma no app em até 45 dias. Cadastro e pedido assistido são avanços do funil, mas não concluem a recorrência.
+### 1. Antes de sair: preparar o dia
 
-## Antes de sair
+O vendedor abre **Meu dia** no celular e confere a meta, as visitas sugeridas, os retornos combinados e as mensagens que podem ser resolvidas pelo WhatsApp. A lista deve explicar por que cada conta está no topo: retorno prometido, etapa do funil, pendência de entrega, janela do decisor ou proximidade da próxima reposição.
 
-1. Revise a lista do dia e o motivo de prioridade de cada lead. Dê preferência a retornos combinados, clientes perto da próxima reposição e oportunidades de alto potencial.
-2. Planeje visitas presenciais para cadastro, primeiro pedido assistido, problemas de entrega e conversas que exigem confiança. Use WhatsApp para combinar horário, acompanhar pedido e lembrar a reposição quando o cliente já opera bem pelo canal.
-3. Use a manhã como janela inicial de tentativa. Os dois compradores entrevistados disseram que a tarde costuma ser ocupada com rotinas administrativas. O horário exato deve ser confirmado com cada pessoa; não deduza a disponibilidade pelo segmento.
-4. Abra o histórico disponível: compras recentes, itens de giro, pendências de entrega, objeções e próximo passo combinado. No protótipo esses dados são demonstrativos; na operação, confirme no sistema oficial.
+Em seguida, revisa o mapa, agrupa os pontos próximos e confere o endereço antes de iniciar a navegação. A manhã é uma boa janela inicial para tentar contato: nas duas entrevistas, os participantes disseram preferir conversas nesse período, pois a tarde tende a ficar ocupada com atividades administrativas. O vendedor confirma a disponibilidade com cada estabelecimento; não presume um horário fixo.
 
-## Roteiro de conversa
+**A plataforma mostra:** a fila priorizada, os motivos da prioridade, os dados disponíveis do lead, a janela de atendimento registrada e os pontos no mapa. **O vendedor decide:** quais visitas fazer, quanto tempo reservar e quais acompanhamentos enviar por mensagem. No protótipo, a carteira, as etapas e vários sinais são demonstrativos; numa operação real, viriam do CRM.
 
-### 1. Visita planejada e visita efetiva
+### 2. No deslocamento: escolher o próximo ponto
 
-Apresente-se, diga por que está visitando e confirme se aquele é um bom momento. Se o decisor não estiver, pergunte quem cuida das compras e qual horário da manhã funciona melhor. Registre o papel e a janela combinada, sem presumir que o dono decide.
+O vendedor seleciona o estabelecimento no mapa, consulta os detalhes e inicia a rota no aplicativo de navegação do celular. Ao chegar, confirma se o local está aberto e se é um bom momento para conversar. A localização ajuda a encontrar o ponto; não substitui a confirmação do endereço ou da presença do responsável.
 
-### 2. Entender a operação de compra
+**A plataforma devolve:** o estabelecimento selecionado e o acesso à navegação externa. **O vendedor faz:** a visita, a conversa e a avaliação do que é possível resolver naquele momento.
 
-Pergunte quais canais a pessoa usa hoje (WhatsApp, sistema/app da distribuidora, vendedor ou atacarejo), quem faz o pedido e qual é o calendário de reposição. Diferencie itens de alto giro dos de baixo giro. A pesquisa ouviu compras semanais de itens de giro e uma operação industrial que programa produção e compras semanalmente; itens de mercearia de menor giro podem ser quinzenais ou mensais. Trate isso como hipótese para aquela conta e confirme antes de agendar lembretes.
+### 3. Na visita: entender quem compra e como
 
-Perguntas úteis:
+O vendedor se apresenta e identifica quem decide ou executa as compras — pode não ser o dono. Se falar com outra pessoa, pede o contato do responsável e pergunta qual horário funciona melhor. Se o decisor estiver ausente, registra a janela informada e combina um retorno. Se o estabelecimento estiver fechado, registra a tentativa e planeja outra.
 
-- Quem monta e aprova os pedidos?
-- Quais itens precisam ser repostos toda semana? Quais duram mais?
-- Como funciona o calendário de compras da loja ou da produção?
-- O que costuma fazer um pedido chegar incompleto ou fora do padrão?
-- Como o fornecedor resolve falta, extravio ou produto com validade curta?
+Quando conversa com o responsável, entende os canais usados hoje, quem monta o pedido, quais itens têm maior giro e com que frequência cada grupo é comprado. Também pergunta o que gera confiança em um fornecedor e como são tratados pedido incompleto, extravio ou validade curta. Os relatos recebidos destacaram WhatsApp e sistemas próprios como canais convenientes, compras frequentes de itens de giro, pedido completo e suporte pós-venda. O vendedor confirma essas condições para cada conta, sem generalizar os relatos.
 
-### 3. Tomador de decisão presente
+**A plataforma pede:** um check-in curto com presença/ausência e resultado. **O vendedor registra:** papel do decisor, janela, canal, frequência, objeção e próximo passo. O formulário deve ser breve para evitar que registrar a visita tome mais tempo do que a interação.
 
-Converse com quem compra ou aprova. Não repita uma apresentação completa para alguém que não decide; peça uma introdução ou agende o retorno no horário informado. Para redes, confirme se uma pessoa compra para várias unidades e se há um fluxo separado para indústria/produção.
+### 4. Cadastro: ajudar sem confundir avanço com conversão final
 
-### 4. Cadastro no app
+Se o estabelecimento ainda é lead, o vendedor explica o cadastro no site/app da Praso e oferece ajuda. Confirma que o cliente entendeu como pedir suporte e quais condições comerciais realmente se aplicam. Não promete preço, prazo de pagamento, disponibilidade ou troca sem confirmar a política vigente.
 
-Explique o que o app resolve e ofereça apoio para o cadastro. Não prometa disponibilidade, prazo, preço ou política de troca sem confirmar as regras vigentes. A pesquisa indica que a confiança depende de pedido correto, atendimento e suporte pós-venda, além de preço.
+**A plataforma devolve:** a etapa atualizada para acompanhamento e um próximo passo, como apoiar o primeiro pedido. O cadastro, por si só, não conta como recorrência; o vendedor mantém o retorno na agenda.
 
-### 5. Primeiro pedido com apoio
+### 5. Primeira compra: acompanhar o pedido e a entrega
 
-Ajude a localizar os itens habituais e confira quantidades e condições antes de concluir. O comprador pode preferir WhatsApp ou o sistema de seu distribuidor atual por agilidade; demonstre o fluxo do app, mas entenda o motivo dessa preferência. Combine como obter ajuda se houver divergência na entrega.
+O vendedor ajuda o cliente a localizar os produtos habituais e revisar itens e quantidades. Se concluir o pedido junto com ele, registra como **assistido**. Combina como acompanhar a entrega e pergunta depois se o pedido chegou completo e com validade adequada. Se houver divergência, registra o problema, encaminha pelo processo oficial e retorna ao cliente até haver uma resposta. Não confirma troca ou solução antes de validar com a equipe responsável.
 
-Após a entrega, pergunte se recebeu tudo como pediu e se a validade estava adequada. Se houver problema, registre e encaminhe segundo a política oficial. Feche o ciclo com retorno ao cliente, mesmo quando a solução ainda estiver em andamento.
+**A plataforma devolve:** o histórico do check-in e um lembrete de acompanhamento. O pedido deve vir do sistema oficial de pedidos; no protótipo, as compras são simuladas e não há integração com pedidos ou entregas reais.
 
-### 6. Compras seguintes e autonomia
+### 6. Entre visitas e à tarde: fazer acompanhamentos adequados ao canal
 
-Combine o próximo contato de acordo com o calendário real do estabelecimento: semanal para itens de giro quando confirmado; quinzenal ou mensal para itens de menor giro quando aplicável. Em indústria, alinhe a conversa à programação de produção e ao estoque necessário para a semana seguinte.
+Entre um ponto e outro, o vendedor revisa o retorno combinado e atualiza o registro enquanto a conversa ainda está fresca. Usa WhatsApp quando for mais conveniente para confirmar horário, conferir a entrega ou lembrar uma reposição. A frequência do contato acompanha o ciclo real do estabelecimento: itens de giro podem exigir reposição semanal; itens de menor giro podem seguir ciclos mais longos. Em uma operação industrial, a conversa precisa acompanhar a programação de produção.
 
-Registre separadamente pedido assistido e pedido feito com autonomia pelo cliente. Ajude nas primeiras interações sem confundir assistência do vendedor com autonomia. O marco de recorrência do case é a terceira compra autônoma em até 45 dias; confirme como a Praso define esse evento nos dados oficiais antes de usar pontos ou resultados como métricas.
+Os participantes entrevistados relataram que a tarde costuma ser ocupada com tarefas administrativas. Por isso, o vendedor tenta concentrar visitas no horário confirmado com cada decisor e reserva períodos menos adequados a visitas para pendências e mensagens. Essa organização é uma hipótese operacional a validar no território, não uma regra universal.
 
-## Registro após cada visita
+**A plataforma devolve:** mensagens de acompanhamento sugeridas e retornos priorizados. **O vendedor ajusta:** o texto, o canal e a data conforme a preferência do cliente; não envia uma mensagem automática sem contexto.
 
-Faça um registro curto, de preferência em até três ações:
+### 7. Compras seguintes: chegar à autonomia
 
-- encontrou o decisor? Quem compra e para quantas unidades?
-- canal de compra e frequência por grupo de produtos;
-- resultado: sem cadastro, cadastro sem pedido, pedido assistido, pedido autônomo ou pendência;
-- objeção principal e problema de entrega, se houver;
-- próximo passo, responsável e data/horário combinado.
+Após a primeira entrega, o vendedor diferencia cada pedido: assistido, quando ele ajudou a concluir; autônomo, quando o próprio cliente comprou no app. Ajuda nas primeiras compras, resolve barreiras de uso e combina o próximo contato. O objetivo é que o cliente consiga fazer sozinho a terceira compra dentro de 45 dias do cadastro.
 
-Não marque pedido como autônomo quando o vendedor o concluiu pelo cliente. Não registre como resolvida uma troca antes da confirmação pelo processo responsável.
+**A plataforma acompanha:** o número e o tipo de compras, o tempo restante e a próxima ação recomendada. **O vendedor faz:** o acompanhamento necessário sem registrar como autônoma uma compra que concluiu pelo cliente. A confirmação da compra e da autonomia depende de dados do sistema de pedidos/CRM, ainda ausentes no protótipo.
 
-## Princípios para priorizar
+### 8. Fim do expediente: fechar os retornos
 
-1. Retorno prometido e problema pós-venda têm dono e prazo claros.
-2. Visita presencial quando a presença ajuda a cadastrar, montar o primeiro pedido ou recuperar confiança.
-3. WhatsApp para conveniência e acompanhamento, respeitando a preferência do comprador.
-4. Frequência vem do ciclo real de cada item/negócio, não de um lembrete fixo de sete dias.
-5. Toda recomendação mostra o motivo e pode ser corrigida pelo vendedor após conversar com o cliente.
+Antes de encerrar o dia, o vendedor revisa os check-ins, corrige registros incompletos e confere se cada promessa tem responsável e prazo. Reagenda tentativas sem decisor, encaminha problemas de entrega pendentes e deixa a fila do dia seguinte pronta. A plataforma deve mostrar o que ficou pendente e quais clientes precisam de retorno primeiro, sem exigir que o vendedor reconstrua o dia de memória.
 
-## Limites desta versão
+## O registro e o retorno da plataforma
 
-As observações vieram de duas conversas e não representam todos os segmentos ou territórios. A preferência pela manhã é um padrão inicial; a janela exata varia. Condições de prazo acima de 21 dias, política de troca, disponibilidade de suporte, status de pedidos e pontuação precisam ser confirmados com a Praso antes de serem apresentados como promessa ou regra oficial. O protótipo ainda usa sinais e etapas simulados.
+Após cada contato, o registro mínimo recomendado é: quem foi encontrado e seu papel; resultado da visita; canal e frequência de compra conhecidos; objeção ou problema relevante; e próximo passo com data/responsável. O sistema deve confirmar que salvou o registro e explicar o que ele alterou na fila ou no acompanhamento.
+
+No protótipo atual, o vendedor pode registrar presença, ausência, local fechado, resultado, objeção, observação e foto opcional. Os registros ficam no armazenamento local do navegador. A fila offline existe como demonstração, mas ainda não sincroniza com uma API ou CRM. Portanto, esta versão não deve ser usada como fonte oficial de leads, pedidos, entregas ou recorrência.
+
+## Trade-offs e limites
+
+- **Priorizar contexto em vez de mais campos:** reduz o esforço por visita, mas depende de dados de lead confiáveis e atualizados.
+- **Visita quando a presença ajuda; mensagem quando resolve:** respeita a preferência por WhatsApp relatada na pesquisa, mas o vendedor deve confirmar o canal de cada cliente.
+- **Acompanhar até a terceira compra autônoma:** alinha o fluxo ao marco do case, mas exige integração com o sistema que confirma pedidos e autonomia.
+- **Rota e mapa:** ajudam no deslocamento, mas coordenadas de demonstração não substituem uma base de clientes validada.
+- **Pós-venda visível:** responde ao valor atribuído à confiabilidade, mas qualquer prazo ou política de troca depende de confirmação oficial.
+
+As entrevistas não foram visitas presenciais nem teste do protótipo. A amostra é pequena; as preferências de horário e compra são sinais iniciais para validar com vendedores e clientes em campo.
