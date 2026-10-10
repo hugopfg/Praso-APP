@@ -32,7 +32,7 @@ e um **registro de visita curto que devolve o próximo passo**.
 
 **Registrar visita (check-in)**
 1. Conseguiu falar com quem decide? (sim / não estava / fechado)
-2. Se não estava: quando ele costuma estar? (o horário fica salvo para a equipe)
+2. Se não estava: quando ele costuma estar? (o horário fica salvo neste aparelho para orientar a próxima visita)
 3. Se falou: como terminou? (opções mudam conforme a etapa do funil)
 4. Se não fechou: o que mais pesou? (preço, entrega, fornecedor, desconfiança do app, tempo, prazo de pagamento)
 
@@ -69,7 +69,7 @@ Esses achados são uma amostra pequena, não regras universais. A faixa 9h–11h
 
 Os nomes e as coordenadas da base atual vêm dos estabelecimentos com nome cadastrados no OpenStreetMap para Sobral (CE). A cobertura do mapa colaborativo pode estar incompleta, e cada registro inclui o link ao objeto de origem para conferência. O estado do funil (etapa, compras, visitas, sinais do app) continua simulado; não há dado da Praso aqui. Distância e tempo a pé são estimativas em linha reta calculadas a partir da localização do aparelho, não uma rota viária.
 
-As visitas, observações e fotos são guardadas no armazenamento local do aparelho. A interface mantém uma fila local; a sincronização automática só poderá ser ligada depois que existir uma API de visitas. O protótipo ainda não tem servidor.
+As visitas, observações e fotos são guardadas no armazenamento local do aparelho. A fila é apenas local: não existe envio automático quando a conexão volta. A sincronização depende da criação de uma API de visitas; o protótipo ainda não tem servidor.
 
 O script `scripts/gerar_dados.py` gera a base. Com `--fonte osm` ele troca os estabelecimentos fictícios
 por estabelecimentos reais do OpenStreetMap (Overpass API, gratuita e sem chave). O funil continua simulado.
