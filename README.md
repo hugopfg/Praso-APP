@@ -9,10 +9,11 @@
 - **Decisões de produto e trade-offs:** [Ver decisões](#decisões-de-produto-e-trade-offs).
 
 Este repositório reúne os entregáveis em um único link. O protótipo é uma demonstração funcional: carteira, etapas de clientes e eventos de compra são simulados e não estão conectados ao CRM ou a pedidos reais.
+O repositório está privado para preservar o material do case; conceda acesso ao avaliador antes de enviar o link.
 
 Protótipo funcional, feito para celular, da plataforma de campo da Praso.
 Cobre a parte que mais mexe na conversão: **o dia do vendedor organizado em torno da recorrência**
-e um **registro de visita em até 3 toques que devolve o próximo passo**.
+e um **registro de visita curto que devolve o próximo passo**.
 
 ## O que tem no protótipo
 
@@ -20,7 +21,7 @@ e um **registro de visita em até 3 toques que devolve o próximo passo**.
 - Rota com as 10 visitas de maior valor esperado, ordenadas pelo horário em que o dono costuma estar
   e, dentro da mesma janela, pelo vizinho mais próximo.
 - Cada visita mostra por que está na fila (prazo da 3ª compra, carrinho aberto no app, alto potencial, dono ausente antes).
-- Lista "Resolver pelo WhatsApp": lembretes de recompra e carrinhos abertos, com mensagem pronta em um toque.
+- Lista "Resolver pelo WhatsApp": lembretes de recompra e carrinhos abertos; abre o WhatsApp com uma mensagem preenchida para o vendedor revisar e enviar.
 - Retornos já agendados pelos registros anteriores.
 
 **Navegação mobile**
@@ -35,7 +36,7 @@ e um **registro de visita em até 3 toques que devolve o próximo passo**.
 3. Se falou: como terminou? (opções mudam conforme a etapa do funil)
 4. Se não fechou: o que mais pesou? (preço, entrega, fornecedor, desconfiança do app, tempo, prazo de pagamento)
 
-Ao final, a plataforma devolve o próximo passo já agendado, o argumento para a objeção e o tempo gasto no registro.
+Ao salvar, o protótipo mostra o resultado e o próximo passo. Quando há uma objeção, também apresenta um argumento sugerido. O tempo do registro não é medido pelo app.
 
 **Carteira de ativação**
 - Clientes entre o cadastro e a 3ª compra autônoma, com o contador de pedidos e indicação de autonomia na 3ª compra, dentro de 45 dias do cadastro.
@@ -44,7 +45,7 @@ Ao final, a plataforma devolve o próximo passo já agendado, o argumento para a
 **Critérios do case**
 - Recorrência só é concluída quando a 3ª compra é feita com autonomia no app em até 45 dias do cadastro; pedidos anteriores podem ter sido assistidos.
 - A pontuação de aquisição é +0,5 para ICP MEI, +1 para ICP não MEI e +3 para estabelecimento de alto potencial. O protótipo usa esses critérios na demonstração; os perfis da base continuam simulados.
-- O registro de pesquisa distingue as duas conversas recebidas de visitas presenciais. Horas de trabalho e avaliação do protótipo não foram informadas.
+- O diário distingue as duas entrevistas por telefone de visitas presenciais: não houve visitas presenciais. O tempo total aproximado do case foi de 3 dias, incluindo 1 hora de entrevistas; não há divisão registrada por etapa. A reflexão do autor destaca o processo inteiro, especialmente desenvolver o software e a parte técnica; o protótipo não foi testado com os entrevistados.
 
 ## Decisões de produto e trade-offs
 
@@ -53,7 +54,7 @@ Ao final, a plataforma devolve o próximo passo já agendado, o argumento para a
 | A fila mistura aquisição e ativação | A meta do vendedor é a 3ª compra autônoma, não o cadastro | Menos leads novos visitados por dia |
 | Visita onde presença converte, WhatsApp no resto | Lead, 1º pedido e cliente que esfriou pedem presença; lembrete de recompra não | Depende de o cliente responder no WhatsApp |
 | Escolher por valor, ordenar por horário | Chegar quando o dono está aumenta a "visita efetiva" e o "tomador de decisão presente" | A rota pode cruzar a cidade entre janelas |
-| Registro em até 3 toques, sempre com retorno | A principal queixa é que registrar não devolve nada | Menos detalhe por visita (sem texto livre) |
+| Check-in curto com próximo passo | A principal queixa é que registrar não devolve nada | O fluxo pode ter mais etapas quando há objeção; o protótipo permite observação opcional |
 | Prioridade explicada em cada item | Vendedor confia no que entende e pode discordar | Pesos simples, não um modelo estatístico |
 | Mapa real + navegação do celular | Usa locais cadastrados no OpenStreetMap e abre a rota no app de mapas | Distância e tempo estimados em linha reta; o app de mapas calcula as ruas |
 | Sem login nem servidor | Validar o fluxo com vendedores antes de integrar | Dados ficam só no aparelho |

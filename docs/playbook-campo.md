@@ -8,6 +8,8 @@ O funil considerado neste case tem seis etapas: visita planejada, visita efetiva
 
 As recomendações partem de duas entrevistas telefônicas de pesquisa, realizadas em 30 minutos cada. Não houve visita presencial aos estabelecimentos, por falta de tempo para ir até eles. Os relatos são uma amostra pequena e não devem ser tratados como regra para todos os clientes. Nomes de empresas e pessoas foram omitidos para preservar a confidencialidade.
 
+Este playbook descreve o fluxo de trabalho proposto. O protótipo demonstra a fila, o mapa, o check-in e o histórico local; ainda não executa cadastro ou pedido real, não coleta todos os dados operacionais sugeridos abaixo e não sincroniza com CRM.
+
 ## Um dia de trabalho
 
 ### 1. Antes de sair: preparar o dia
@@ -30,11 +32,11 @@ O vendedor se apresenta e identifica quem decide ou executa as compras — pode 
 
 Quando conversa com o responsável, entende os canais usados hoje, quem monta o pedido, quais itens têm maior giro e com que frequência cada grupo é comprado. Também pergunta o que gera confiança em um fornecedor e como são tratados pedido incompleto, extravio ou validade curta. Os relatos recebidos destacaram WhatsApp e sistemas próprios como canais convenientes, compras frequentes de itens de giro, pedido completo e suporte pós-venda. O vendedor confirma essas condições para cada conta, sem generalizar os relatos.
 
-**A plataforma pede:** um check-in curto com presença/ausência e resultado. **O vendedor registra:** papel do decisor, janela, canal, frequência, objeção e próximo passo. O formulário deve ser breve para evitar que registrar a visita tome mais tempo do que a interação.
+**No fluxo proposto, a plataforma pede:** um check-in curto com presença/ausência e resultado. **O vendedor registra:** papel do decisor, janela, canal, frequência, objeção e próximo passo. O formulário deve ser breve para evitar que registrar a visita tome mais tempo do que a interação. No protótipo atual, o formulário cobre presença/ausência, resultado, objeção, observação e foto opcional; papel, canal e frequência não têm campos próprios.
 
 ### 4. Cadastro: ajudar sem confundir avanço com conversão final
 
-Se o estabelecimento ainda é lead, o vendedor explica o cadastro no site/app da Praso e oferece ajuda. Confirma que o cliente entendeu como pedir suporte e quais condições comerciais realmente se aplicam. Não promete preço, prazo de pagamento, disponibilidade ou troca sem confirmar a política vigente.
+Se o estabelecimento ainda é lead, o vendedor explica o cadastro no app/site de compras da Praso e oferece ajuda para o cliente se cadastrar nele. Confirma que o cliente entendeu como pedir suporte e quais condições comerciais realmente se aplicam. Não promete preço, prazo de pagamento, disponibilidade ou troca sem confirmar a política vigente. O protótipo de campo não realiza o cadastro real: apenas representa a etapa no funil demonstrativo.
 
 **A plataforma devolve:** a etapa atualizada para acompanhamento e um próximo passo, como apoiar o primeiro pedido. O cadastro, por si só, não conta como recorrência; o vendedor mantém o retorno na agenda.
 

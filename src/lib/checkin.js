@@ -64,7 +64,7 @@ export function aplicarCheckin(e, r) {
     novo.voltaEmDias = 1;
     dev.titulo = `Volta agendada para ${diaSemana(1)}, ${novo.janelaDono}`;
     dev.linhas.push('A fila de amanhã já te leva lá no horário em que o dono costuma estar.');
-    if (r.janela) dev.linhas.push('O horário do dono fica salvo para qualquer vendedor que passar por lá.');
+    if (r.janela) dev.linhas.push('O horário do responsável fica salvo neste aparelho para orientar a próxima visita.');
     return { novo, dev };
   }
 
