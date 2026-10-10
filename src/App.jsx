@@ -20,8 +20,8 @@ function carregar() {
 }
 
 const capitalizar = (t) => t.charAt(0).toUpperCase() + t.slice(1);
-const COR_ETAPA = { lead: '#6484b8', oportunidade: '#a9804a', churn: '#a9804a', ativacao: '#5d8d74', recorrente: '#5d8d74' };
-const corDe = (e) => (e.etapa === 'ativacao' && nivelRisco(e) === 'alto' ? '#b66f69' : COR_ETAPA[e.etapa] || '#7b8b80');
+const COR_ETAPA = { lead: '#8299bb', oportunidade: '#b89972', churn: '#b89972', ativacao: '#83a392', recorrente: '#83a392' };
+const corDe = (e) => (e.etapa === 'ativacao' && nivelRisco(e) === 'alto' ? '#c28f89' : COR_ETAPA[e.etapa] || '#89978e');
 const nomeDecisor = (e) => (/a confirmar/.test(e.decisor || '') ? 'quem decide' : (e.decisor || '').split(' ')[0]);
 const FONTE_JANELA = {
   entrevistas: 'padrão validado em entrevistas',
@@ -274,10 +274,10 @@ function MeuDia({ estado, abrir, iniciar, mensagem }) {
 /* ---------- Mapa do território ---------- */
 
 const FILTROS_MAPA = [
-  { id: 'lead', t: 'Leads', cor: '#6484b8', ok: (e) => e.etapa === 'lead' },
-  { id: 'oport', t: 'Sem compra ou parados', cor: '#a9804a', ok: (e) => e.etapa === 'oportunidade' || e.etapa === 'churn' },
-  { id: 'ativ', t: 'Em ativação', cor: '#5d8d74', ok: (e) => e.etapa === 'ativacao' && nivelRisco(e) !== 'alto' },
-  { id: 'risco', t: 'Risco de prazo', cor: '#b66f69', ok: (e) => e.etapa === 'ativacao' && nivelRisco(e) === 'alto' },
+  { id: 'lead', t: 'Leads', cor: '#8299bb', ok: (e) => e.etapa === 'lead' },
+  { id: 'oport', t: 'Sem compra ou parados', cor: '#b89972', ok: (e) => e.etapa === 'oportunidade' || e.etapa === 'churn' },
+  { id: 'ativ', t: 'Em ativação', cor: '#83a392', ok: (e) => e.etapa === 'ativacao' && nivelRisco(e) !== 'alto' },
+  { id: 'risco', t: 'Risco de prazo', cor: '#c28f89', ok: (e) => e.etapa === 'ativacao' && nivelRisco(e) === 'alto' },
 ];
 
 function MapaCompleto({ estabelecimentos, abrir }) {

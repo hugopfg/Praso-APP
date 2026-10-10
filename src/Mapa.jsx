@@ -11,8 +11,28 @@ const ATRIB = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStre
 // Chave do Google Maps vem do .env.local (VITE_GOOGLE_KEY ou VITE_GOOGLE_MAPS_API_KEY).
 // Sem chave, ou se o Google recusar, o app usa o mapa alternativo (Leaflet + OpenStreetMap).
 const CHAVE_GOOGLE = import.meta.env.VITE_GOOGLE_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-const MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';
 const ICONE_GARFO_FACA = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3v5.5M8 3v5.5M10 3v5.5M6 8.5h4M8 8.5V21M17.5 3c-1.8 2-2.5 4-2.5 6 0 1.4 1 2.5 2.5 2.5V21"/></svg>';
+const ESTILO_MAPA_CLARO = [
+  { elementType: 'geometry', stylers: [{ color: '#f8fafc' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#738197' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#dfe6ee' }] },
+  { featureType: 'landscape.natural', elementType: 'geometry', stylers: [{ color: '#f4f7f9' }] },
+  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#edf3f1' }] },
+  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#82928d' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#e9edf2' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#8995a5' }] },
+  { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#edf1f5' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e9f1f6' }] },
+];
+
+function iconeGoogle(it) {
+  const utensilios = '<path d="M12 5v4.5M14 5v4.5M16 5v4.5M12 9.5h4M14 9.5V19M21 5c-1.4 1.6-2 3.2-2 4.7 0 1.1.7 1.9 2 1.9V19" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>';
+  const ordem = it.rotulo ? `<circle cx="30" cy="9" r="8" fill="white" stroke="${it.cor}" stroke-width="2"/><text x="30" y="12" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" font-weight="700" fill="#58677d">${it.rotulo}</text>` : '';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="${it.cor}" stroke="white" stroke-width="2"/>${utensilios}${ordem}</svg>`;
+  return { url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`, scaledSize: new window.google.maps.Size(40, 40), anchor: new window.google.maps.Point(20, 20) };
+}
 
 // itens: [{ id, lat, lng, cor, rotulo, nome }]
 // rota: liga os pinos na ordem com linha tracejada
@@ -50,24 +70,6 @@ function carregarGoogle(chave) {
   return carregando;
 }
 
-function elementoPino(it) {
-  const el = document.createElement('span');
-  const numerado = Boolean(it.rotulo);
-  el.className = `pin pin-restaurante${numerado ? ' pin-rotulado' : ''}`;
-  const tam = 40;
-  Object.assign(el.style, {
-    background: it.cor, width: `${tam}px`, height: `${tam}px`, transform: 'translateY(50%)', cursor: 'pointer',
-  });
-  el.innerHTML = ICONE_GARFO_FACA;
-  if (numerado) {
-    const ordem = document.createElement('span');
-    ordem.className = 'pin-ordem';
-    ordem.textContent = it.rotulo;
-    el.append(ordem);
-  }
-  return el;
-}
-
 function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = false, chave, falhou }) {
   const caixa = useRef(null);
   const mapa = useRef(null);
@@ -86,13 +88,12 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
     carregarGoogle(chave)
       .then(async () => {
         const { Map } = await window.google.maps.importLibrary('maps');
-        const { AdvancedMarkerElement } = await window.google.maps.importLibrary('marker');
         if (!vivo) return;
-        Marcador.current = AdvancedMarkerElement;
+        Marcador.current = window.google.maps.Marker;
         mapa.current = new Map(caixa.current, {
           center: { lat: -8.05, lng: -34.9 },
           zoom: 13,
-          mapId: MAP_ID,
+          styles: ESTILO_MAPA_CLARO,
           backgroundColor: '#ffffff',
           disableDefaultUI: true,
           zoomControl: true,
@@ -120,8 +121,8 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
     const limites = new g.LatLngBounds();
     itens.forEach((it) => {
       const pos = { lat: it.lat, lng: it.lng };
-      const mk = new Marcador.current({ map: m, position: pos, content: elementoPino(it), title: it.nome });
-      mk.addEventListener('gmp-click', () => aoTocar?.(it.id));
+      const mk = new Marcador.current({ map: m, position: pos, icon: iconeGoogle(it), title: it.nome });
+      mk.addListener('click', () => aoTocar?.(it.id));
       marcadores.current.push(mk);
       limites.extend(pos);
     });
@@ -155,11 +156,12 @@ function MapaGoogle({ itens, rota = false, aoTocar, classe = '', localizar = fal
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         const pos = { lat: coords.latitude, lng: coords.longitude };
-        if (eu.current) eu.current.position = pos;
+        if (eu.current) eu.current.setPosition(pos);
         else {
-          const ponto = document.createElement('span');
-          ponto.className = 'pin-eu';
-          eu.current = new Marcador.current({ map: mapa.current, position: pos, content: ponto, title: 'Você está aqui' });
+          eu.current = new window.google.maps.Marker({
+            map: mapa.current, position: pos, title: 'Você está aqui',
+            icon: { path: window.google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: '#6386c8', fillOpacity: 1, strokeColor: '#ffffff', strokeWeight: 3 },
+          });
         }
         mapa.current.setCenter(pos);
         mapa.current.setZoom(15);
