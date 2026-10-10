@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import mock from './data/mock.js';
 import {
-  ETAPAS, OBJECOES, PRAZO_RECORRENCIA, acaoSugerida, montarDia,
+  ETAPAS, OBJECOES, PRAZO_RECORRENCIA, acaoSugerida, montarDia, comprasFeitas, terceiraCompraAutonoma,
 } from './lib/regras.js';
 import { aplicarCheckin, resultadosPorEtapa, JANELAS_OPCOES } from './lib/checkin.js';
 import Mapa from './Mapa.jsx';
@@ -96,9 +96,12 @@ export default function App() {
 
   function saveCheckin(client, response, note, photo) {
     const { novo, dev } = aplicarCheckin(client, response);
+    const pedidoFeito = ['cadastro_pedido', 'pedido', 'pedido_ajuda', 'pedido_autonomo'].includes(response.resultado);
+    const pontuarAquisicao = pedidoFeito && !client.aquisicaoPontuada && !['churn', 'recorrente'].includes(client.etapa) && !(client.compras || []).length;
+    if (pontuarAquisicao) novo.aquisicaoPontuada = true;
     const visit = { id: crypto.randomUUID?.() || `${Date.now()}-${client.id}`, clientId: client.id, createdAt: new Date().toISOString(), outcome: response.resultado || response.encontro, note, photo, syncStatus: navigator.onLine ? 'pending' : 'offline' };
     novo.visitas = [{ ...(novo.visitas?.[0] || {}), observacao: note, foto: photo || undefined, registroId: visit.id }, ...(novo.visitas || []).slice(1)];
-    const gained = novo.etapa === 'recorrente' && client.etapa !== 'recorrente' ? client.pontos : 0;
+    const gained = pontuarAquisicao ? client.pontos : 0;
     setState((old) => ({
       ...old, pontosGanhos: old.pontosGanhos + gained, registros: [...old.registros, { id: client.id, tipo: 'checkin', seg: 0, visitaId: visit.id }],
       filaSincronizacao: [...(old.filaSincronizacao || []), visit], estabelecimentos: old.estabelecimentos.map((x) => x.id === client.id ? novo : x),
@@ -240,22 +243,23 @@ function Ativacao({ clients, selected, done, onSelect }) {
   const [showAll, setShowAll] = useState(false);
   const client = clients.find((candidate) => candidate.id === activeClientId) || selected;
   if (!client) return <div className="scroll-content"><PageTitle title="Ativação" subtitle="Clientes que precisam de acompanhamento até a recorrência."/><Empty text="Nenhum estabelecimento nesta etapa agora."/></div>;
-  const purchases = client.compras?.length || 0;
-  const stepLabels = ['Cadastro aprovado', 'App instalado pelo dono', 'Primeiro pedido', 'Cliente recorrente'];
-  const activeIndex = Math.min(purchases + 2, 3);
-  const completedSteps = Math.min(purchases + 2, 4);
+  const purchases = comprasFeitas(client);
+  const recurrenceDone = client.etapa === 'recorrente' || terceiraCompraAutonoma(client);
+  const thirdOrder = (client.comprasAutonomas || []).find((purchase) => purchase.ordem === 3);
+  const stepLabels = ['Cadastro no app', '1ª compra com apoio', '2ª compra', '3ª compra autônoma'];
+  const completedSteps = recurrenceDone ? 4 : Math.min(purchases + 1, 3);
   const initials = client.nome.split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toUpperCase();
   const due = Math.max(0, PRAZO_RECORRENCIA - (client.cadastroDiasAtras || 0));
   return <div className="scroll-content activation-content">
     <PageTitle title="Ativação" subtitle={`${done} etapa${done === 1 ? '' : 's'} concluída${done === 1 ? '' : 's'} no mês`} action={`Ver todas (${clients.length})`} onAction={() => setShowAll((value) => !value)} />
     {showAll && <div className="list-card activation-picker">{clients.map((candidate) => <button className={`list-row ${candidate.id === client.id ? 'picker-active' : ''}`} key={candidate.id} onClick={() => { setActiveClientId(candidate.id); setShowAll(false); }}><span className="row-copy"><strong>{candidate.nome}</strong><small>{FOOD_SEGMENT(candidate.tipo)} · {candidate.bairro || base.cidade}</small></span><Icon name="chevron" size={18}/></button>)}</div>}
     <section className="card activation-card">
-      <button className="activation-client" onClick={() => onSelect(client.id)}><span className="client-monogram">{initials}</span><span className="client-main"><strong>{client.nome}</strong><small>{FOOD_SEGMENT(client.tipo)} · {client.bairro || base.cidade}</small></span><span className="client-points"><strong>+{points(client.pontos)}</strong><small>pontos</small></span></button>
-      <div className="stage-summary"><strong>Etapa {Math.min(activeIndex + 1, 4)} de 4</strong><span className="muted">Prazo {due ? `em ${due} dias` : 'encerrado'}</span></div>
+      <button className="activation-client" onClick={() => onSelect(client.id)}><span className="client-monogram">{initials}</span><span className="client-main"><strong>{client.nome}</strong><small>{FOOD_SEGMENT(client.tipo)} · {client.bairro || base.cidade}</small></span><span className="client-points"><strong>+{points(client.pontos)}</strong><small>potenciais</small></span></button>
+      <div className="stage-summary"><strong>{recurrenceDone ? '3ª compra autônoma concluída' : thirdOrder ? '3ª compra autônoma fora do prazo' : purchases >= 3 ? '3ª compra registrada · autonomia pendente' : `${purchases} de 3 compras registradas`}</strong><span className="muted">Prazo {due ? `em ${due} dias` : 'encerrado'}</span></div>
       <div className="steps-track" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow={completedSteps} aria-label={`${completedSteps} de 4 etapas`}>
         {stepLabels.map((_, index) => <span key={index} className={index < completedSteps ? 'step-done' : index === completedSteps && completedSteps < 4 ? 'step-current' : ''}/>)}</div>
     </section>
-    <section className="focus-card activation-focus" aria-current="step"><div className="focus-body"><span className="eyebrow blue-text">Próximo passo</span><h2>{client.problemaEntrega ? 'Resolver a primeira entrega' : purchases === 0 ? 'Fazer o primeiro pedido' : 'Acompanhar a próxima compra'}</h2><p>{acaoSugerida(client).texto}</p></div><button className="focus-link" onClick={() => onSelect(client.id)}>Ver detalhes do estabelecimento<Icon name="chevron" size={18}/></button></section>
+    <section className="focus-card activation-focus" aria-current="step"><div className="focus-body"><span className="eyebrow blue-text">Próximo passo</span><h2>{client.problemaEntrega ? 'Resolver a primeira entrega' : recurrenceDone ? 'Recorrência concluída' : purchases === 0 ? 'Fazer a 1ª compra com apoio' : purchases === 1 ? 'Acompanhar a 2ª compra' : purchases === 2 ? 'Preparar a 3ª compra autônoma' : 'Revisar a autonomia de compra'}</h2><p>{acaoSugerida(client).texto}</p></div><button className="focus-link" onClick={() => onSelect(client.id)}>Ver detalhes do estabelecimento<Icon name="chevron" size={18}/></button></section>
     <section className="day-section"><h2 className="section-label">Etapas</h2><div className="list-card step-list">{stepLabels.map((label, index) => { const complete = index < completedSteps; const current = index === completedSteps && completedSteps < 4; return <div className="list-row step-row" key={label} aria-current={current ? 'step' : undefined}><Icon name={complete ? 'check' : 'info'} className={complete ? 'text-green' : current ? 'blue-text' : 'muted'}/><strong>{label}</strong><small className={current ? 'blue-text step-now' : 'muted'}>{complete ? 'Concluída' : current ? 'Agora' : 'Pendente'}</small></div>; })}</div></section>
     <section className="card basket-card"><span className="eyebrow blue-text">Cesta sugerida</span><h2>Itens para a próxima conversa</h2><p>Use o histórico de compras real do estabelecimento quando a integração estiver disponível.</p></section>
     <p className="data-note">O estágio e o histórico de compras exibidos são dados de demonstração, ainda não integrados ao sistema de vendas.</p>
@@ -269,12 +273,12 @@ function Sobre({ records, visits, clientsById, queued, online, reset }) {
   const visitLabel = (outcome) => ({
     decisor: 'Falou com quem decide', dono_ausente: 'Responsável ausente', fechado: 'Estabelecimento fechado',
     cadastro_pedido: 'Cadastro e primeiro pedido', cadastro: 'Cadastro feito', pedido_ajuda: 'Pedido feito com ajuda',
-    pedido: 'Pedido feito', vai_pedir: 'Vai pedir pelo app', nao: 'Não comprou nesta visita',
+    pedido: 'Pedido feito', pedido_autonomo: 'Compra autônoma pelo app', vai_pedir: 'Vai pedir pelo app', nao: 'Não comprou nesta visita',
   }[outcome] || 'Visita registrada');
   const sortedVisits = [...visits].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   return <div className="scroll-content about-content">
     <section className="profile-card"><span className="avatar avatar-large">{base.vendedor.charAt(0)}</span><span><h1>{base.vendedor === 'Hugo' ? 'Hugo Parente' : base.vendedor}</h1><p className="muted">Vendedor de campo · {base.cidade}</p></span></section>
-    <section className="about-section"><h2 className="section-label">Pontuação</h2><div className="list-card"><div className="list-row"><span>Cliente ativado</span><strong>+1,5</strong></div><div className="list-row"><span>Cliente em risco recuperado</span><strong>+1</strong></div><div className="list-row"><span>Visita registrada</span><strong>+0,5</strong></div></div><p className="footnote">Valores ilustrativos. A regra oficial de pontos ainda precisa ser conectada.</p></section>
+    <section className="about-section"><h2 className="section-label">Pontuação de aquisição</h2><div className="list-card"><div className="list-row"><span>Estabelecimento ICP MEI conquistado</span><strong>+0,5</strong></div><div className="list-row"><span>Estabelecimento ICP não MEI conquistado</span><strong>+1</strong></div><div className="list-row"><span>Estabelecimento ICP de alto potencial de compra</span><strong>+3</strong></div></div><p className="footnote">Critérios conforme o case. Os perfis dos estabelecimentos nesta demonstração são simulados.</p></section>
     <section className="about-section"><h2 className="section-label">Suporte</h2><div className="list-card"><div className="list-row support-row"><Icon name="phone"/><strong>Falar com o supervisor</strong><span className="muted support-placeholder">Contato a configurar</span></div><div className="list-row support-row"><Icon name="help"/><strong>Central de ajuda</strong><span className="muted support-placeholder">Em breve</span></div></div><p className="footnote">Adicione o telefone do supervisor e o endereço oficial da central de ajuda.</p></section>
     <section className="about-section"><h2 className="section-label">Dados e conexão</h2><div className="list-card status-list"><div className="list-row"><span>Conexão</span><strong className={online ? 'text-green' : 'text-amber'}>{online ? 'Online' : 'Offline'}</strong></div><div className="list-row"><span>Visitas salvas neste aparelho</span><strong>{count}</strong></div><div className="list-row"><span>Na fila local</span><strong>{queued}</strong></div></div><p className="footnote">Os registros permanecem neste dispositivo. O envio automático depende de uma API de sincronização que ainda não está configurada.</p></section>
     <section className="about-section"><h2 className="section-label">Visitas registradas</h2>{sortedVisits.length ? <div className="list-card visit-history">{sortedVisits.map((visit) => {
@@ -298,7 +302,7 @@ function Checkin({ client, onClose, onSave }) {
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState('');
   const [saving, setSaving] = useState(false);
-  const step = !response.encontro ? 'encontro' : response.encontro === 'dono_ausente' ? 'janela' : !response.resultado && response.encontro !== 'fechado' ? 'resultado' : !response.objecao && response.resultado === 'nao' ? 'objecao' : 'review';
+  const step = !response.encontro ? 'encontro' : response.encontro === 'dono_ausente' && !response.janelaRespondida ? 'janela' : !response.resultado && response.encontro !== 'fechado' ? 'resultado' : !response.objecao && response.resultado === 'nao' ? 'objecao' : 'review';
   const choose = (next) => setResponse((value) => ({ ...value, ...next }));
   const onPhoto = async (event) => {
     const file = event.target.files?.[0];
@@ -316,7 +320,7 @@ function Checkin({ client, onClose, onSave }) {
   };
   return <div className="modal-backdrop"><section className="full-modal checkin-modal" role="dialog" aria-modal="true" aria-label={`Registrar visita em ${client.nome}`} onKeyDown={(event) => event.key === 'Escape' && onClose()}><div className="modal-top"><button className="text-back" onClick={onClose}>Cancelar</button><strong>{client.nome}</strong></div>
     {step === 'encontro' && <><PageTitle title="Conseguiu falar com quem decide?" subtitle="Escolha uma opção para registrar a visita."/><div className="choice-list"><Choice onClick={() => choose({ encontro: 'decisor' })}>Sim, falei com quem decide</Choice><Choice onClick={() => choose({ encontro: 'dono_ausente' })}>Não estava</Choice><Choice onClick={() => choose({ encontro: 'fechado' })}>Estava fechado</Choice></div></>}
-    {step === 'janela' && <><PageTitle title="Quando ele costuma estar?" subtitle="Esse horário ajuda a equipe na próxima visita."/><div className="choice-list">{JANELAS_OPCOES.map((value) => <Choice key={value} onClick={() => choose({ janela: value, resultado: 'nao', objecao: 'tempo' })}>{value}</Choice>)}<Choice onClick={() => choose({ resultado: 'nao', objecao: 'tempo' })}>Não souberam informar</Choice></div></>}
+    {step === 'janela' && <><PageTitle title="Quando ele costuma estar?" subtitle="Esse horário ajuda a equipe na próxima visita."/><div className="choice-list">{JANELAS_OPCOES.map((value) => <Choice key={value} onClick={() => choose({ janela: value, janelaRespondida: true, resultado: 'nao', objecao: 'tempo' })}>{value}</Choice>)}<Choice onClick={() => choose({ janelaRespondida: true, resultado: 'nao', objecao: 'tempo' })}>Não souberam informar</Choice></div></>}
     {step === 'resultado' && <><PageTitle title="Como terminou a conversa?" subtitle="Selecione o resultado que melhor representa a visita."/><div className="choice-list">{resultadosPorEtapa(client.etapa).map((option) => <Choice key={option.id} onClick={() => choose({ resultado: option.id })}>{option.t}</Choice>)}</div></>}
     {step === 'objecao' && <><PageTitle title="O que mais pesou?" subtitle="A objeção principal orienta o próximo passo."/><div className="choice-list">{Object.entries(OBJECOES).map(([key, objection]) => <Choice key={key} onClick={() => choose({ objecao: key })}>{objection.rotulo}</Choice>)}</div></>}
     {step === 'review' && <><PageTitle title="Resumo da visita" subtitle="Adicione um comentário ou uma foto se for útil."/><div className="card result-card"><span className="text-green">✓ Resultado selecionado</span><strong>{response.resultado || response.encontro}</strong></div><label className="field-label">Observação <span className="muted">(opcional)</span><textarea value={note} onChange={(event) => setNote(event.target.value)} rows="4" maxLength="500" placeholder="Anote o combinado ou o próximo passo"/></label><label className="upload-button">{photo ? 'Foto anexada ✓' : 'Adicionar foto (opcional)'}<input type="file" accept="image/*" capture="environment" onChange={onPhoto}/></label>{photo && <img className="photo-preview" src={photo} alt="Prévia da foto anexada"/>}<button className="primary-button save-visit" disabled={saving} onClick={() => { setSaving(true); onSave(client, response, note, photo); }}>{saving ? 'Salvando…' : 'Salvar visita'}</button></>}
@@ -334,4 +338,3 @@ function useDialogFocus() {
     return () => { if (previous instanceof HTMLElement) previous.focus(); };
   }, []);
 }
-

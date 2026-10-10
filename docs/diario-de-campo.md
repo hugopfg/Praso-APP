@@ -7,6 +7,15 @@
 - **Observação presencial:** não relatada; este documento registra somente as conversas compartilhadas.
 - **Privacidade:** participantes e estabelecimentos não identificados.
 
+## Atividades e evidências disponíveis
+
+- **Pesquisa recebida:** duas conversas com responsáveis por compras, compartilhadas pelo candidato. Os relatos foram organizados por perfil, disponibilidade, canal, frequência de compra e critérios de confiança.
+- **Visitas presenciais realizadas:** não há visita presencial descrita nos dados recebidos; não atribuo endereço ou nome fictício às conversas.
+- **Horas por parte do case:** não informadas. Não foram fornecidos apontamentos de tempo para pesquisa, protótipo, playbook ou diário.
+- **Partes do protótipo que agradaram:** não houve avaliação do protótipo nas conversas recebidas. Os entrevistados valorizaram confiabilidade, pedido completo, pós-venda, suporte no cadastro e no primeiro pedido; isso é critério de compra, não aprovação de uma tela ou funcionalidade do app.
+
+Essas lacunas são mantidas explícitas para não apresentar entrevistas remotas como visitas nem inferir horas ou feedback que não foram registrados.
+
 ## Relato 1 — responsável por três lojas e uma indústria
 
 A mesma pessoa cuida das compras de três lojas e de uma operação industrial. Prefere conversar com vendedores pela manhã e deixa a tarde para tarefas administrativas. Compra principalmente por WhatsApp, às vezes diretamente com o vendedor e recorre ao atacarejo em último caso.

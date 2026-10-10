@@ -34,6 +34,7 @@
  * @property {number} lat
  * @property {number} lng
  * @property {number|null} daysSinceLastOrder
+ * @property {{ordem: number, diasCadastro: number}[]=} comprasAutonomas Registra a ordem e a idade do cadastro quando houve compra autônoma.
  * @property {string=} osmType
  * @property {number=} osmId
  *

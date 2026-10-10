@@ -28,8 +28,13 @@ e um **registro de visita em até 3 toques que devolve o próximo passo**.
 Ao final, a plataforma devolve o próximo passo já agendado, o argumento para a objeção e o tempo gasto no registro.
 
 **Carteira de ativação**
-- Todos os clientes entre o cadastro e a 3ª compra autônoma, com progresso (cadastro, 1ª, 2ª, 3ª) e prazo de 45 dias.
+- Clientes entre o cadastro e a 3ª compra autônoma, com o contador de pedidos e indicação de autonomia na 3ª compra, dentro de 45 dias do cadastro.
 - Detecta quando o ciclo natural de compra do cliente passa do prazo e sugere antecipar a compra.
+
+**Critérios do case**
+- Recorrência só é concluída quando a 3ª compra é feita com autonomia no app em até 45 dias do cadastro; pedidos anteriores podem ter sido assistidos.
+- A pontuação de aquisição é +0,5 para ICP MEI, +1 para ICP não MEI e +3 para estabelecimento de alto potencial. O protótipo usa esses critérios na demonstração; os perfis da base continuam simulados.
+- O registro de pesquisa distingue as duas conversas recebidas de visitas presenciais. Horas de trabalho e avaliação do protótipo não foram informadas.
 
 ## Decisões de produto e trade-offs
 

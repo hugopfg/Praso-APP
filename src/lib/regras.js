@@ -76,6 +76,13 @@ export function comprasFeitas(e) {
   return (e.compras || []).length;
 }
 
+// A 3ª compra precisa ser autônoma e acontecer até 45 dias após o cadastro.
+export function terceiraCompraAutonoma(e) {
+  return Boolean(e.recorrenciaConcluida) || (e.comprasAutonomas || []).some(
+    (compra) => compra.ordem === 3 && compra.diasCadastro <= PRAZO_RECORRENCIA,
+  );
+}
+
 export function diasDesdeUltimaCompra(e) {
   const c = e.compras || [];
   return c.length ? Math.min(...c) : null;
@@ -83,7 +90,7 @@ export function diasDesdeUltimaCompra(e) {
 
 // Risco de não chegar à 3ª compra no prazo: compras que faltam por dia restante.
 export function riscoAtivacao(e) {
-  const faltam = 3 - comprasFeitas(e);
+  const faltam = terceiraCompraAutonoma(e) ? 0 : Math.max(1, 3 - comprasFeitas(e));
   const dias = Math.max(diasRestantes(e), 1);
   return faltam / dias;
 }
@@ -107,19 +114,15 @@ export function acaoSugerida(e) {
     return { canal: 'visita', texto: 'Fazer o 1º pedido junto' };
   }
   if (e.etapa === 'ativacao') {
-    const n = comprasFeitas(e);
-    if (n === 0) return { canal: 'visita', texto: 'Fazer o 1º pedido junto' };
+    const totalPedidos = comprasFeitas(e);
+    if (terceiraCompraAutonoma(e)) return { canal: 'aguardar', texto: 'Recorrência concluída' };
+    if (totalPedidos === 0) return { canal: 'visita', texto: 'Fazer o 1º pedido junto' };
     // Achado das entrevistas (2 de 2): o cliente fica com quem entrega certo e resolve problemas.
     if (e.problemaEntrega) return { canal: 'whatsapp', texto: 'Resolver o problema da 1ª entrega', posEntrega: true };
-    if (n === 1 && !e.entregaConfirmada) return { canal: 'whatsapp', texto: 'Conferir a 1ª entrega: chegou tudo certo?', posEntrega: true };
-    const desde = diasDesdeUltimaCompra(e);
-    const faltaParaCiclo = (e.cicloCompraDias || 7) - desde;
-    if (faltaParaCiclo <= 1)
-      return { canal: 'whatsapp', texto: `Lembrar a reposição (${n + 1}ª compra)` };
-    // O ciclo natural do cliente passaria do prazo: antecipar a compra agora.
-    if (faltaParaCiclo >= diasRestantes(e) - (3 - n - 1))
-      return { canal: 'whatsapp', texto: `Antecipar a ${n + 1}ª compra: o ciclo dele passa do prazo` };
-    return { canal: 'aguardar', texto: `Próxima compra esperada em ${faltaParaCiclo} dias` };
+    if (totalPedidos === 1 && !e.entregaConfirmada) return { canal: 'whatsapp', texto: 'Conferir a 1ª entrega: chegou tudo certo?', posEntrega: true };
+    if (totalPedidos === 1) return { canal: 'visita', texto: 'Acompanhar a 2ª compra' };
+    if (totalPedidos === 2) return { canal: 'visita', texto: 'Preparar a 3ª compra autônoma no app' };
+    return { canal: 'visita', texto: 'Recuperar a autonomia de compra no app' };
   }
   return { canal: 'aguardar', texto: 'Cliente recorrente' };
 }
@@ -145,7 +148,7 @@ export function priorizar(e, hora) {
     const dr = diasRestantes(e);
     score *= nivel === 'alto' ? 3 : nivel === 'medio' ? 1.8 : 1;
     motivos.push({
-      t: `${dr} dias para a 3ª compra, ${comprasFeitas(e)} de 3 feitas`,
+      t: `${dr} dias para a 3ª compra autônoma, ${comprasFeitas(e)} de 3 compras`,
       tom: nivel === 'alto' ? 'alerta' : 'neutro',
     });
   }

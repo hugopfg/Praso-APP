@@ -6,6 +6,19 @@ Levar cada estabelecimento da primeira conversa até uma terceira compra feita c
 
 Este playbook transforma duas conversas de pesquisa em orientações iniciais. Elas apontam padrões, não regras universais. O vendedor deve confirmar decisor, janela de atendimento, frequência de compra e condições comerciais em cada conta.
 
+## As seis etapas do funil no trabalho de campo
+
+| Etapa | O vendedor faz para converter | A plataforma apoia com |
+|---|---|---|
+| Visita planejada | Escolhe os pontos prioritários e combina retornos. | Fila do dia com motivo da prioridade, janela conhecida e rota no mapa. |
+| Visita efetiva | Confirma que o estabelecimento está aberto e registra o resultado. | Check-in curto; quando o local está fechado, agenda nova tentativa. |
+| Tomador de decisão | Identifica quem compra e confirma quando essa pessoa está disponível. | Registro de ausência e janela para orientar a próxima visita. |
+| Cadastro no app | Ajuda o decisor a concluir o cadastro, sem encerrar o trabalho nessa conversão. | Acompanha a conta em ativação e mantém o prazo da recorrência visível. |
+| Primeira compra | Apoia o primeiro pedido, confere os itens e combina a checagem da entrega. | Registra pedido assistido e sugere o acompanhamento pós-entrega. |
+| Terceira compra autônoma | Acompanha as compras seguintes e ajuda o cliente a comprar sozinho no app. | Distingue pedido assistido de autônomo e sinaliza o limite de 45 dias. |
+
+O marco de sucesso do case é a terceira compra autônoma no app em até 45 dias. Cadastro e pedido assistido são avanços do funil, mas não concluem a recorrência.
+
 ## Antes de sair
 
 1. Revise a lista do dia e o motivo de prioridade de cada lead. Dê preferência a retornos combinados, clientes perto da próxima reposição e oportunidades de alto potencial.
