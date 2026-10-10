@@ -408,6 +408,7 @@ section h2 { color: var(--brand-deep); font-size: 1.28rem; letter-spacing: -0.01
 .aba-icone { width: 21px; height: 21px; }
 .filtros button { border-color: var(--line); border-radius: 999px; }
 .filtros button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.filtros-mapa button.on { background: var(--brand-soft); border-color: var(--line); color: var(--ink); }
 .opcao { border-width: 1px; border-radius: 16px; background: #fff; }
 .painel { background: var(--bg); }
 .marca { background: var(--brand); }
@@ -426,3 +427,4 @@ section h2 { color: var(--brand-deep); font-size: 1.28rem; letter-spacing: -0.01
   .mapa-titulo { margin-left: 70px; }
   .mapa-rota { min-height: 260px; height: 38vh; }
 }
+
