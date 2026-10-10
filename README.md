@@ -9,7 +9,7 @@
 - **Decisões de produto e trade-offs:** [Ver decisões](#decisões-de-produto-e-trade-offs).
 
 Este repositório reúne os entregáveis em um único link. O protótipo é uma demonstração funcional: carteira, etapas de clientes e eventos de compra são simulados e não estão conectados ao CRM ou a pedidos reais.
-O repositório está privado para preservar o material do case; conceda acesso ao avaliador antes de enviar o link.
+O repositório está público e pode ser acessado pelo link acima.
 
 Protótipo funcional, feito para celular, da plataforma de campo da Praso.
 Cobre a parte que mais mexe na conversão: **o dia do vendedor organizado em torno da recorrência**
