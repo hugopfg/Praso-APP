@@ -121,7 +121,10 @@ export default function App() {
       <header className="global-header" aria-hidden={modalOpen} inert={modalOpen}>
         <div className="territory-bar"><span><Icon name="pin" size={14}/>Seu território: <strong>{base.territorio ? `${base.territorio}, ` : ''}{base.cidade}, CE</strong></span><span className="route-status"><i/>Em rota</span></div>
         <div className="top-bar">
-          <div className="wordmark" aria-label="praso campo"><strong>praso</strong><span> campo</span></div>
+          <button className="brand-lockup" aria-label="Ir para Meu dia" onClick={() => go('dia')}>
+            <img className="brand-logo" src="/praso-logo.svg" alt="" />
+            <span className="wordmark"><strong>praso</strong><span> campo</span></span>
+          </button>
           <div className="top-actions">
             <button className="icon-button notification-button" aria-label={`Notificações${riskCount ? `, ${riskCount} clientes em risco` : ''}`} onClick={() => go('dia')}><Icon name="bell"/><i/></button>
             <button className="avatar avatar-small" aria-label={`Perfil de ${base.vendedor}`} onClick={() => go('sobre')}>{base.vendedor.charAt(0)}</button>
@@ -133,7 +136,7 @@ export default function App() {
         {tab === 'dia' && <MeuDia day={day} totalPoints={totalPoints} done={visitCount} risks={riskCount} onSelect={setSelected} onOpenMap={() => go('mapa')} />}
         {tab === 'mapa' && <MapaScreen clients={clients} day={day} onLocation={setSellerPosition} sellerPosition={sellerPosition} onDetails={setSelected} />}
         {tab === 'ativacao' && <Ativacao clients={activationList} selected={activationClient} done={completedActivations} onSelect={setSelected} />}
-        {tab === 'sobre' && <Sobre records={state.registros} queued={state.filaSincronizacao?.length || 0} online={online} reset={resetDemo} />}
+        {tab === 'sobre' && <Sobre records={state.registros} visits={state.filaSincronizacao || []} clientsById={byId} queued={state.filaSincronizacao?.length || 0} online={online} reset={resetDemo} />}
       </main>
 
       {(tab === 'dia' || tab === 'ativacao') && <PrimaryAction onClick={() => setCheckinId((tab === 'ativacao' ? activationClient : nextVisit)?.id)} disabled={tab === 'ativacao' && !activationClient} inert={modalOpen} aria-hidden={modalOpen} />}
@@ -200,17 +203,17 @@ function MapaScreen({ clients, day, onLocation, sellerPosition, onDetails }) {
   const [filter, setFilter] = useState('Todos');
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState(day.visitas[0]?.e.id || clients[0]?.id);
-  const filtered = clients.filter((client) => {
+  const filtered = useMemo(() => clients.filter((client) => {
     const matchesQuery = client.nome.toLocaleLowerCase('pt-BR').includes(query.toLocaleLowerCase('pt-BR'));
     const matchesFilter = filter === 'Todos' || (filter === 'Leads' && client.etapa === 'lead') || (filter === 'Em ativação' && client.etapa === 'ativacao') || (filter === 'Em risco' && (client.etapa === 'churn' || client.problemaEntrega));
     return matchesQuery && matchesFilter;
-  });
-  const markers = filtered.map((client, index) => ({ id: client.id, lat: client.lat, lng: client.lng, nome: client.nome, tipo: client.tipo, cor: COLORS[client.etapa] || COLORS.lead, rotulo: index + 1 }));
+  }), [clients, filter, query]);
+  const markers = useMemo(() => filtered.map((client, index) => ({ id: client.id, lat: client.lat, lng: client.lng, nome: client.nome, tipo: client.tipo, cor: COLORS[client.etapa] || COLORS.lead, rotulo: index + 1 })), [filtered]);
   const selected = filtered.find((x) => x.id === selectedId) || filtered[0];
-  const routePath = sellerPosition && selected ? [sellerPosition, { lat: selected.lat, lng: selected.lng }] : [];
+  const routePath = useMemo(() => sellerPosition && selected ? [sellerPosition, { lat: selected.lat, lng: selected.lng }] : [], [sellerPosition, selected]);
   const startNavigation = (client) => { if (!client) return; window.open(`https://www.google.com/maps/dir/?api=1&destination=${client.lat},${client.lng}`, '_blank', 'noopener,noreferrer'); };
   return <div className="map-page">
-    <Mapa itens={markers} routePath={routePath} aoTocar={setSelectedId} classe="map-full" localizar onLocation={onLocation} />
+    <Mapa itens={markers} routePath={routePath} aoTocar={setSelectedId} viewportKey={`${filter}:${query}`} classe="map-full" localizar onLocation={onLocation} />
     <div className="map-search-wrap"><label className="map-search"><Icon name="search"/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cliente" aria-label="Buscar cliente no mapa"/><span>{filtered.length}</span></label>
       <div className="map-filters" role="group" aria-label="Filtrar estabelecimentos">{['Todos', 'Leads', 'Em ativação', 'Em risco'].map((name) => <button key={name} className={filter === name ? 'selected-filter' : ''} aria-pressed={filter === name} onClick={() => setFilter(name)}>{name}</button>)}</div>
     </div>
@@ -261,13 +264,25 @@ function Ativacao({ clients, selected, done, onSelect }) {
 
 function PageTitle({ title, subtitle, action, onAction }) { return <div className="page-title-row"><div><h1>{title}</h1><p className="muted">{subtitle}</p></div>{action && (onAction ? <button className="text-link text-link-button" onClick={onAction}>{action}</button> : <span className="text-link">{action}</span>)}</div>; }
 
-function Sobre({ records, queued, online, reset }) {
+function Sobre({ records, visits, clientsById, queued, online, reset }) {
   const count = records.filter((record) => record.tipo === 'checkin').length;
+  const visitLabel = (outcome) => ({
+    decisor: 'Falou com quem decide', dono_ausente: 'Responsável ausente', fechado: 'Estabelecimento fechado',
+    cadastro_pedido: 'Cadastro e primeiro pedido', cadastro: 'Cadastro feito', pedido_ajuda: 'Pedido feito com ajuda',
+    pedido: 'Pedido feito', vai_pedir: 'Vai pedir pelo app', nao: 'Não comprou nesta visita',
+  }[outcome] || 'Visita registrada');
+  const sortedVisits = [...visits].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   return <div className="scroll-content about-content">
     <section className="profile-card"><span className="avatar avatar-large">{base.vendedor.charAt(0)}</span><span><h1>{base.vendedor === 'Hugo' ? 'Hugo Parente' : base.vendedor}</h1><p className="muted">Vendedor de campo · {base.cidade}</p></span></section>
     <section className="about-section"><h2 className="section-label">Pontuação</h2><div className="list-card"><div className="list-row"><span>Cliente ativado</span><strong>+1,5</strong></div><div className="list-row"><span>Cliente em risco recuperado</span><strong>+1</strong></div><div className="list-row"><span>Visita registrada</span><strong>+0,5</strong></div></div><p className="footnote">Valores ilustrativos. A regra oficial de pontos ainda precisa ser conectada.</p></section>
     <section className="about-section"><h2 className="section-label">Suporte</h2><div className="list-card"><div className="list-row support-row"><Icon name="phone"/><strong>Falar com o supervisor</strong><span className="muted support-placeholder">Contato a configurar</span></div><div className="list-row support-row"><Icon name="help"/><strong>Central de ajuda</strong><span className="muted support-placeholder">Em breve</span></div></div><p className="footnote">Adicione o telefone do supervisor e o endereço oficial da central de ajuda.</p></section>
     <section className="about-section"><h2 className="section-label">Dados e conexão</h2><div className="list-card status-list"><div className="list-row"><span>Conexão</span><strong className={online ? 'text-green' : 'text-amber'}>{online ? 'Online' : 'Offline'}</strong></div><div className="list-row"><span>Visitas salvas neste aparelho</span><strong>{count}</strong></div><div className="list-row"><span>Na fila local</span><strong>{queued}</strong></div></div><p className="footnote">Os registros permanecem neste dispositivo. O envio automático depende de uma API de sincronização que ainda não está configurada.</p></section>
+    <section className="about-section"><h2 className="section-label">Visitas registradas</h2>{sortedVisits.length ? <div className="list-card visit-history">{sortedVisits.map((visit) => {
+      const client = clientsById[visit.clientId];
+      const date = new Date(visit.createdAt);
+      const dateLabel = Number.isNaN(date.getTime()) ? 'Data não disponível' : date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+      return <article className="visit-history-row" key={visit.id}><div className="visit-history-head"><strong>{client?.nome || 'Estabelecimento'}</strong><time dateTime={visit.createdAt}>{dateLabel}</time></div><span className="visit-result">{visitLabel(visit.outcome)}</span>{visit.note && <p>{visit.note}</p>}{visit.photo && <img className="visit-photo" src={visit.photo} alt={`Foto registrada na visita a ${client?.nome || 'estabelecimento'}`}/>}<small className={visit.syncStatus === 'offline' ? 'text-amber' : 'muted'}>{visit.syncStatus === 'offline' ? 'Salva offline neste aparelho' : 'Aguardando sincronização'}</small></article>;
+    })}</div> : <div className="list-card visit-history-empty">Nenhuma visita registrada ainda. Use “Registrar visita” em Meu dia ou no perfil de um estabelecimento.</div>}</section>
     <div className="signout"><button onClick={reset}>Limpar dados desta demonstração</button><span>praso campo · versão 2.0</span></div>
   </div>;
 }
@@ -319,3 +334,4 @@ function useDialogFocus() {
     return () => { if (previous instanceof HTMLElement) previous.focus(); };
   }, []);
 }
+
