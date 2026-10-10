@@ -11,7 +11,6 @@ const ATRIB = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStre
 // Chave do Google Maps vem do .env.local (VITE_GOOGLE_KEY ou VITE_GOOGLE_MAPS_API_KEY).
 // Sem chave, ou se o Google recusar, o app usa o mapa alternativo (Leaflet + OpenStreetMap).
 const CHAVE_GOOGLE = import.meta.env.VITE_GOOGLE_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-const MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';
 const glifoTipo = (tipo, cor) => {
   const t = (tipo || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const estilo = `fill="none" stroke="${cor}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"`;
@@ -61,19 +60,6 @@ function carregarGoogle(chave) {
   return carregando;
 }
 
-function elementoPino(it) {
-  const el = document.createElement('span');
-  el.className = `pin${it.rotulo ? ' pin-rotulado' : ''}`;
-  Object.assign(el.style, {
-    '--pin-color': it.cor,
-    width: '44px',
-    height: '54px',
-    cursor: 'pointer',
-  });
-  el.innerHTML = svgPino(it.cor, it.tipo, it.rotulo);
-  return el;
-}
-
 function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, viewportKey = '', classe = '', localizar = false, chave, falhou }) {
   const caixa = useRef(null);
   const mapa = useRef(null);
@@ -92,13 +78,10 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
     carregarGoogle(chave)
       .then(async () => {
         const { Map } = await window.google.maps.importLibrary('maps');
-        const { AdvancedMarkerElement } = await window.google.maps.importLibrary('marker');
         if (!vivo) return;
-        Marcador.current = AdvancedMarkerElement;
         mapa.current = new Map(caixa.current, {
           center: { lat: -3.689, lng: -40.349 },
           zoom: 13,
-          mapId: MAP_ID,
           backgroundColor: '#ffffff',
           disableDefaultUI: true,
           zoomControl: true,
@@ -125,14 +108,19 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
 
     itens.forEach((it) => {
       const pos = { lat: it.lat, lng: it.lng };
-      const mk = new Marcador.current({
+      const svg = svgPino(it.cor, it.tipo, it.rotulo).replace('class="pin-svg"', 'width="44" height="54"');
+      const mk = new g.Marker({
         map: m,
         position: pos,
-        content: elementoPino(it),
+        icon: {
+          url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+          scaledSize: new g.Size(44, 54),
+          anchor: new g.Point(22, 52),
+        },
         title: `${it.nome} — toque para ver detalhes`,
-        gmpClickable: true,
+        optimized: true,
       });
-      mk.addEventListener('gmp-click', () => aoTocar?.(it.id));
+      mk.addListener('click', () => aoTocar?.(it.id));
       marcadores.current.push(mk);
     });
 
@@ -182,11 +170,21 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
       ({ coords }) => {
         const pos = { lat: coords.latitude, lng: coords.longitude };
         onLocation?.(pos);
-        if (eu.current) eu.current.position = pos;
+        if (eu.current) eu.current.setPosition(pos);
         else {
-          const ponto = document.createElement('span');
-          ponto.className = 'pin-eu';
-          eu.current = new Marcador.current({ map: mapa.current, position: pos, content: ponto, title: 'Você está aqui' });
+          eu.current = new window.google.maps.Marker({
+            map: mapa.current,
+            position: pos,
+            title: 'Você está aqui',
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: '#6386c8',
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 3,
+            },
+          });
         }
         mapa.current.setCenter(pos);
         mapa.current.setZoom(Math.max(mapa.current.getZoom() || 0, 15));
