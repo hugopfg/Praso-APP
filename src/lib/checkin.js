@@ -11,6 +11,7 @@ export function resultadosPorEtapa(etapa) {
   if (etapa === 'ativacao')
     return [
       { id: 'pedido_ajuda', t: 'Fez pedido com a minha ajuda' },
+      { id: 'pedido_autonomo', t: 'Comprou sozinho pelo app' },
       { id: 'vai_pedir', t: 'Vai pedir sozinho pelo app' },
       { id: 'nao', t: 'Não quer pedir agora' },
     ];
@@ -23,13 +24,20 @@ export function resultadosPorEtapa(etapa) {
 
 export const JANELAS_OPCOES = ['7h–9h', '9h–11h30', '14h–16h', '15h–17h', '18h–20h'];
 
-function comCompraHoje(e) {
+function comCompraHoje(e, autonomo = false) {
   const compras = [0, ...(e.compras || [])];
-  const etapa = compras.length >= 3 ? 'recorrente' : 'ativacao';
+  const comprasAutonomas = [...(e.comprasAutonomas || [])];
+  const diasCadastro = Math.max(0, e.cadastroDiasAtras || 0);
+  if (autonomo) comprasAutonomas.push({ ordem: compras.length, diasCadastro });
+  const recorrenciaConcluida = Boolean(e.recorrenciaConcluida)
+    || (compras.length === 3 && autonomo && diasCadastro <= PRAZO_RECORRENCIA);
+  const etapa = e.etapa === 'recorrente' || recorrenciaConcluida ? 'recorrente' : 'ativacao';
   return {
     ...e,
     etapa,
     compras,
+    comprasAutonomas,
+    recorrenciaConcluida,
     cadastroDiasAtras: e.etapa === 'ativacao' ? e.cadastroDiasAtras : 0,
     cicloCompraDias: e.cicloCompraDias || 7,
     // 1ª compra feita agora: a entrega ainda precisa ser conferida
@@ -56,7 +64,7 @@ export function aplicarCheckin(e, r) {
     novo.voltaEmDias = 1;
     dev.titulo = `Volta agendada para ${diaSemana(1)}, ${novo.janelaDono}`;
     dev.linhas.push('A fila de amanhã já te leva lá no horário em que o dono costuma estar.');
-    if (r.janela) dev.linhas.push('O horário do dono fica salvo para qualquer vendedor que passar por lá.');
+    if (r.janela) dev.linhas.push('O horário do responsável fica salvo neste aparelho para orientar a próxima visita.');
     return { novo, dev };
   }
 
@@ -68,21 +76,25 @@ export function aplicarCheckin(e, r) {
   switch (r.resultado) {
     case 'cadastro_pedido':
     case 'pedido':
-    case 'pedido_ajuda': {
-      novo = { ...comCompraHoje(novo), voltaEmDias: undefined };
-      const n = novo.compras.length;
-      if (novo.etapa === 'recorrente') {
-        dev.titulo = 'Cliente chegou à 3ª compra';
-        dev.linhas.push('Atenção: a 3ª compra conta para recorrência quando é feita pelo próprio cliente no app.');
-        dev.pontos = `Vale ${String(e.pontos).replace('.', ',')} pt quando confirmada como autônoma`;
+    case 'pedido_ajuda':
+    case 'pedido_autonomo': {
+      const autonomo = r.resultado === 'pedido_autonomo';
+      novo = { ...comCompraHoje(novo, autonomo), voltaEmDias: undefined };
+      if (novo.recorrenciaConcluida) {
+        dev.titulo = 'Cliente chegou à 3ª compra autônoma';
+        dev.linhas.push('Recorrência concluída dentro do prazo de 45 dias do cadastro.');
       } else {
         const prazo = PRAZO_RECORRENCIA - novo.cadastroDiasAtras;
-        dev.titulo = `${ETAPAS.ativacao}: ${n} de 3 compras`;
-        dev.linhas.push(`Prazo para a 3ª compra autônoma: ${prazo} dias.`);
+        const n = novo.compras.length;
+        dev.titulo = n === 3 && autonomo
+          ? '3ª compra autônoma registrada fora do prazo'
+          : n >= 3 ? '3ª compra registrada; autonomia não confirmada' : `${ETAPAS.ativacao}: ${n} de 3 compras`;
+        if (n === 3 && autonomo) dev.linhas.push('A compra foi autônoma, mas ocorreu após o prazo de 45 dias do cadastro.');
+        dev.linhas.push(`Prazo para a 3ª compra autônoma: ${Math.max(0, prazo)} dias.`);
+        if (!autonomo) dev.linhas.push('Este pedido foi assistido e não conta como compra autônoma.');
         if (n === 1)
           dev.linhas.push('Depois da entrega, confira com ele se chegou tudo completo. Nas entrevistas, é o que mais pesa para o cliente voltar a comprar.');
         dev.linhas.push(`Lembrete de reposição programado para daqui a ${novo.cicloCompraDias - 1} dias, pelo WhatsApp.`);
-        dev.pontos = `Vale ${String(e.pontos).replace('.', ',')} pt quando virar recorrente`;
       }
       return { novo, dev };
     }
@@ -91,7 +103,6 @@ export function aplicarCheckin(e, r) {
       dev.titulo = 'Cadastro feito';
       dev.linhas.push(`Retorno agendado para ${diaSemana(2)}, ${novo.janelaDono}, para fazer o 1º pedido junto.`);
       dev.linhas.push('Quem cadastra e não compra na primeira semana costuma esfriar. Hipótese a validar com os dados da Praso.');
-      dev.pontos = `Vale ${String(e.pontos).replace('.', ',')} pt quando virar recorrente`;
       return { novo, dev };
     }
     case 'vai_pedir': {

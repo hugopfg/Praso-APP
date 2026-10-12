@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import mock from './data/mock.js';
 import {
-  ETAPAS, OBJECOES, PRAZO_RECORRENCIA, acaoSugerida, montarDia,
+  ETAPAS, OBJECOES, PRAZO_RECORRENCIA, acaoSugerida, montarDia, comprasFeitas, terceiraCompraAutonoma,
 } from './lib/regras.js';
 import { aplicarCheckin, resultadosPorEtapa, JANELAS_OPCOES } from './lib/checkin.js';
 import Mapa from './Mapa.jsx';
@@ -67,6 +67,9 @@ export default function App() {
   const [tab, go] = usePath();
   const [selected, setSelected] = useState(null);
   const [checkinId, setCheckinId] = useState(null);
+  const [newLeadLocation, setNewLeadLocation] = useState(null);
+  const [leadLocationError, setLeadLocationError] = useState('');
+  const [locatingLead, setLocatingLead] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
   const [notice, setNotice] = useState('');
   const [sellerPosition, setSellerPosition] = useState(null);
@@ -96,14 +99,36 @@ export default function App() {
 
   function saveCheckin(client, response, note, photo) {
     const { novo, dev } = aplicarCheckin(client, response);
-    const visit = { id: crypto.randomUUID?.() || `${Date.now()}-${client.id}`, clientId: client.id, createdAt: new Date().toISOString(), outcome: response.resultado || response.encontro, note, photo, syncStatus: navigator.onLine ? 'pending' : 'offline' };
-    novo.visitas = [{ ...(novo.visitas?.[0] || {}), observacao: note, foto: photo || undefined, registroId: visit.id }, ...(novo.visitas || []).slice(1)];
-    const gained = novo.etapa === 'recorrente' && client.etapa !== 'recorrente' ? client.pontos : 0;
+    const pedidoFeito = ['cadastro_pedido', 'pedido', 'pedido_ajuda', 'pedido_autonomo'].includes(response.resultado);
+    const pontuarAquisicao = pedidoFeito && !client.aquisicaoPontuada && !['churn', 'recorrente'].includes(client.etapa) && !(client.compras || []).length;
+    if (pontuarAquisicao) novo.aquisicaoPontuada = true;
+    const visit = { id: crypto.randomUUID?.() || `${Date.now()}-${client.id}`, clientId: client.id, createdAt: new Date().toISOString(), encounter: response.encontro, outcome: response.resultado || response.encontro, objection: response.objecao || '', contactName: response.contactName?.trim() || '', promise: response.promise?.trim() || '', note, photo, syncStatus: navigator.onLine ? 'pending' : 'offline' };
+    if (visit.contactName) novo.decisorConfirmado = visit.contactName;
+    novo.visitas = [{ ...(novo.visitas?.[0] || {}), resultado: visit.outcome, encontro: visit.encounter, objecao: visit.objection, contato: visit.contactName, promessa: visit.promise, observacao: note, foto: photo || undefined, registroId: visit.id, createdAt: visit.createdAt }, ...(novo.visitas || []).slice(1)];
+    const gained = pontuarAquisicao ? client.pontos : 0;
     setState((old) => ({
       ...old, pontosGanhos: old.pontosGanhos + gained, registros: [...old.registros, { id: client.id, tipo: 'checkin', seg: 0, visitaId: visit.id }],
       filaSincronizacao: [...(old.filaSincronizacao || []), visit], estabelecimentos: old.estabelecimentos.map((x) => x.id === client.id ? novo : x),
     }));
-    setCheckinId(null); setSelected(null); setNotice(navigator.onLine ? `${dev.titulo}. Visita salva neste aparelho.` : 'Visita salva offline. Será enviada quando a conexão voltar.');
+    setCheckinId(null); setSelected(null); setNotice(navigator.onLine ? `${dev.titulo}. Visita salva neste aparelho.` : 'Visita salva offline neste aparelho. Não há envio automático configurado.');
+  }
+
+  function startNewLead() {
+    setLeadLocationError('');
+    if (!navigator.geolocation) { setLeadLocationError('Este navegador não oferece acesso à localização.'); return; }
+    setLocatingLead(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => { setLocatingLead(false); setNewLeadLocation({ lat: coords.latitude, lng: coords.longitude }); },
+      (error) => { setLocatingLead(false); setLeadLocationError(error.code === 1 ? 'Permita o acesso à localização para marcar o lead no mapa.' : 'Não foi possível obter a localização. Confira o sinal e tente novamente.'); },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 },
+    );
+  }
+
+  function saveNewLead(lead) {
+    const client = { id: `lead-${crypto.randomUUID?.() || Date.now()}`, nome: lead.nome.trim(), tipo: lead.tipo, lat: newLeadLocation.lat, lng: newLeadLocation.lng, bairro: 'Lead de campo', endereco: 'Localização registrada pelo vendedor', fonte: 'Cadastro de campo', porte: null, pontos: 0, etapa: 'lead', janelaDono: '', decisor: 'A confirmar', visitas: [], sinais: [], compras: [], fotoFachada: lead.foto || '', criadoEm: new Date().toISOString() };
+    setState((old) => ({ ...old, estabelecimentos: [client, ...old.estabelecimentos] }));
+    setNewLeadLocation(null);
+    setNotice('Lead salvo neste aparelho e adicionado ao mapa.');
   }
 
   function resetDemo() {
@@ -114,7 +139,7 @@ export default function App() {
   }
 
   const overlayClient = checkinId ? byId[checkinId] : selected ? byId[selected] : null;
-  const modalOpen = Boolean(checkinId || overlayClient);
+  const modalOpen = Boolean(checkinId || overlayClient || newLeadLocation);
 
   return (
     <div className="app-shell">
@@ -134,7 +159,7 @@ export default function App() {
 
       <main className={`page page-${tab}`} key={tab} aria-hidden={modalOpen} inert={modalOpen}>
         {tab === 'dia' && <MeuDia day={day} totalPoints={totalPoints} done={visitCount} risks={riskCount} onSelect={setSelected} onOpenMap={() => go('mapa')} />}
-        {tab === 'mapa' && <MapaScreen clients={clients} day={day} onLocation={setSellerPosition} sellerPosition={sellerPosition} onDetails={setSelected} />}
+        {tab === 'mapa' && <MapaScreen clients={clients} day={day} onLocation={setSellerPosition} sellerPosition={sellerPosition} onDetails={setSelected} visits={state.filaSincronizacao || []} onNewLead={startNewLead} leadLocationError={leadLocationError} locatingLead={locatingLead} />}
         {tab === 'ativacao' && <Ativacao clients={activationList} selected={activationClient} done={completedActivations} onSelect={setSelected} />}
         {tab === 'sobre' && <Sobre records={state.registros} visits={state.filaSincronizacao || []} clientsById={byId} queued={state.filaSincronizacao?.length || 0} online={online} reset={resetDemo} />}
       </main>
@@ -146,8 +171,9 @@ export default function App() {
         ].map(([id, label, icon]) => <button key={id} className={`tab-item ${tab === id ? 'active' : ''}`} onClick={() => go(id)} aria-current={tab === id ? 'page' : undefined}><span className="tab-icon"><Icon name={icon}/></span><span>{label}</span></button>)}
       </nav>
 
-      {overlayClient && !checkinId && <ClientDetails client={overlayClient} onClose={() => setSelected(null)} onCheckin={() => setCheckinId(overlayClient.id)} />}
+      {overlayClient && !checkinId && <ClientDetails client={overlayClient} visits={state.filaSincronizacao || []} onClose={() => setSelected(null)} onCheckin={() => setCheckinId(overlayClient.id)} />}
       {checkinId && byId[checkinId] && <Checkin client={byId[checkinId]} onClose={() => setCheckinId(null)} onSave={saveCheckin} />}
+      {newLeadLocation && <NewLeadForm location={newLeadLocation} onClose={() => setNewLeadLocation(null)} onSave={saveNewLead} />}
       {notice && <div className="toast" role="status">{notice}</div>}
     </div>
   );
@@ -199,7 +225,7 @@ function stageGoal(client) {
   return 'Relacionamento';
 }
 
-function MapaScreen({ clients, day, onLocation, sellerPosition, onDetails }) {
+function MapaScreen({ clients, day, onLocation, sellerPosition, onDetails, visits, onNewLead, leadLocationError, locatingLead }) {
   const [filter, setFilter] = useState('Todos');
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState(day.visitas[0]?.e.id || clients[0]?.id);
@@ -215,9 +241,11 @@ function MapaScreen({ clients, day, onLocation, sellerPosition, onDetails }) {
   return <div className="map-page">
     <Mapa itens={markers} routePath={routePath} aoTocar={setSelectedId} viewportKey={`${filter}:${query}`} classe="map-full" localizar onLocation={onLocation} />
     <div className="map-search-wrap"><label className="map-search"><Icon name="search"/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cliente" aria-label="Buscar cliente no mapa"/><span>{filtered.length}</span></label>
+      <button className="new-lead-button" onClick={onNewLead} disabled={locatingLead} aria-live="polite"><Icon name="plus" size={18}/>{locatingLead ? 'Obtendo localização…' : 'Novo lead aqui'}</button>
+      {leadLocationError && <p className="lead-location-error" role="alert">{leadLocationError}</p>}
       <div className="map-filters" role="group" aria-label="Filtrar estabelecimentos">{['Todos', 'Leads', 'Em ativação', 'Em risco'].map((name) => <button key={name} className={filter === name ? 'selected-filter' : ''} aria-pressed={filter === name} onClick={() => setFilter(name)}>{name}</button>)}</div>
     </div>
-    {selected && <section className="bottom-sheet" aria-label="Próxima parada"><div className="sheet-grabber"/><div className="sheet-heading"><div><span className="eyebrow blue-text">Próxima parada · {selected.janelaDono?.split('–')[0] || 'A combinar'}</span><h1>{selected.nome}</h1><p className="muted">{stageGoal(selected)} · {ETAPAS[selected.etapa] || selected.tipo}</p></div><div className="sheet-distance">{sellerPosition ? <><strong>{distanceLabel(sellerPosition, selected)}</strong><small>{walkingTimeLabel(sellerPosition, selected)} a pé · aprox.</small></> : <><strong>—</strong><small>distância</small></>}</div></div><div className="sheet-actions"><button className="outline-button" onClick={() => onDetails(selected.id)}>Detalhes</button><button className="primary-button" onClick={() => startNavigation(selected)}><Icon name="navigate"/>Iniciar rota</button></div></section>}
+    {selected && <section className="bottom-sheet" aria-label="Próxima parada"><div className="sheet-grabber"/><div className="sheet-heading"><div><span className="eyebrow blue-text">Próxima parada · {selected.janelaDono?.split('–')[0] || 'A combinar'}</span><h1>{selected.nome}</h1><p className="muted">{stageGoal(selected)} · {ETAPAS[selected.etapa] || selected.tipo}</p></div><div className="sheet-distance">{sellerPosition ? <><strong>{distanceLabel(sellerPosition, selected)}</strong><small>{walkingTimeLabel(sellerPosition, selected)} a pé · aprox.</small></> : <><strong>—</strong><small>distância</small></>}</div></div><VisitQuickSummary client={selected} visits={visits} compact/><div className="sheet-actions"><button className="outline-button" onClick={() => onDetails(selected.id)}>Detalhes</button><button className="primary-button" onClick={() => startNavigation(selected)}><Icon name="navigate"/>Iniciar rota</button></div></section>}
   </div>;
 }
 
@@ -240,22 +268,23 @@ function Ativacao({ clients, selected, done, onSelect }) {
   const [showAll, setShowAll] = useState(false);
   const client = clients.find((candidate) => candidate.id === activeClientId) || selected;
   if (!client) return <div className="scroll-content"><PageTitle title="Ativação" subtitle="Clientes que precisam de acompanhamento até a recorrência."/><Empty text="Nenhum estabelecimento nesta etapa agora."/></div>;
-  const purchases = client.compras?.length || 0;
-  const stepLabels = ['Cadastro aprovado', 'App instalado pelo dono', 'Primeiro pedido', 'Cliente recorrente'];
-  const activeIndex = Math.min(purchases + 2, 3);
-  const completedSteps = Math.min(purchases + 2, 4);
+  const purchases = comprasFeitas(client);
+  const recurrenceDone = client.etapa === 'recorrente' || terceiraCompraAutonoma(client);
+  const thirdOrder = (client.comprasAutonomas || []).find((purchase) => purchase.ordem === 3);
+  const stepLabels = ['Cadastro no app', '1ª compra com apoio', '2ª compra', '3ª compra autônoma'];
+  const completedSteps = recurrenceDone ? 4 : Math.min(purchases + 1, 3);
   const initials = client.nome.split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toUpperCase();
   const due = Math.max(0, PRAZO_RECORRENCIA - (client.cadastroDiasAtras || 0));
   return <div className="scroll-content activation-content">
     <PageTitle title="Ativação" subtitle={`${done} etapa${done === 1 ? '' : 's'} concluída${done === 1 ? '' : 's'} no mês`} action={`Ver todas (${clients.length})`} onAction={() => setShowAll((value) => !value)} />
     {showAll && <div className="list-card activation-picker">{clients.map((candidate) => <button className={`list-row ${candidate.id === client.id ? 'picker-active' : ''}`} key={candidate.id} onClick={() => { setActiveClientId(candidate.id); setShowAll(false); }}><span className="row-copy"><strong>{candidate.nome}</strong><small>{FOOD_SEGMENT(candidate.tipo)} · {candidate.bairro || base.cidade}</small></span><Icon name="chevron" size={18}/></button>)}</div>}
     <section className="card activation-card">
-      <button className="activation-client" onClick={() => onSelect(client.id)}><span className="client-monogram">{initials}</span><span className="client-main"><strong>{client.nome}</strong><small>{FOOD_SEGMENT(client.tipo)} · {client.bairro || base.cidade}</small></span><span className="client-points"><strong>+{points(client.pontos)}</strong><small>pontos</small></span></button>
-      <div className="stage-summary"><strong>Etapa {Math.min(activeIndex + 1, 4)} de 4</strong><span className="muted">Prazo {due ? `em ${due} dias` : 'encerrado'}</span></div>
+      <button className="activation-client" onClick={() => onSelect(client.id)}><span className="client-monogram">{initials}</span><span className="client-main"><strong>{client.nome}</strong><small>{FOOD_SEGMENT(client.tipo)} · {client.bairro || base.cidade}</small></span><span className="client-points"><strong>+{points(client.pontos)}</strong><small>potenciais</small></span></button>
+      <div className="stage-summary"><strong>{recurrenceDone ? '3ª compra autônoma concluída' : thirdOrder ? '3ª compra autônoma fora do prazo' : purchases >= 3 ? '3ª compra registrada · autonomia pendente' : `${purchases} de 3 compras registradas`}</strong><span className="muted">Prazo {due ? `em ${due} dias` : 'encerrado'}</span></div>
       <div className="steps-track" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow={completedSteps} aria-label={`${completedSteps} de 4 etapas`}>
         {stepLabels.map((_, index) => <span key={index} className={index < completedSteps ? 'step-done' : index === completedSteps && completedSteps < 4 ? 'step-current' : ''}/>)}</div>
     </section>
-    <section className="focus-card activation-focus" aria-current="step"><div className="focus-body"><span className="eyebrow blue-text">Próximo passo</span><h2>{client.problemaEntrega ? 'Resolver a primeira entrega' : purchases === 0 ? 'Fazer o primeiro pedido' : 'Acompanhar a próxima compra'}</h2><p>{acaoSugerida(client).texto}</p></div><button className="focus-link" onClick={() => onSelect(client.id)}>Ver detalhes do estabelecimento<Icon name="chevron" size={18}/></button></section>
+    <section className="focus-card activation-focus" aria-current="step"><div className="focus-body"><span className="eyebrow blue-text">Próximo passo</span><h2>{client.problemaEntrega ? 'Resolver a primeira entrega' : recurrenceDone ? 'Recorrência concluída' : purchases === 0 ? 'Fazer a 1ª compra com apoio' : purchases === 1 ? 'Acompanhar a 2ª compra' : purchases === 2 ? 'Preparar a 3ª compra autônoma' : 'Revisar a autonomia de compra'}</h2><p>{acaoSugerida(client).texto}</p></div><button className="focus-link" onClick={() => onSelect(client.id)}>Ver detalhes do estabelecimento<Icon name="chevron" size={18}/></button></section>
     <section className="day-section"><h2 className="section-label">Etapas</h2><div className="list-card step-list">{stepLabels.map((label, index) => { const complete = index < completedSteps; const current = index === completedSteps && completedSteps < 4; return <div className="list-row step-row" key={label} aria-current={current ? 'step' : undefined}><Icon name={complete ? 'check' : 'info'} className={complete ? 'text-green' : current ? 'blue-text' : 'muted'}/><strong>{label}</strong><small className={current ? 'blue-text step-now' : 'muted'}>{complete ? 'Concluída' : current ? 'Agora' : 'Pendente'}</small></div>; })}</div></section>
     <section className="card basket-card"><span className="eyebrow blue-text">Cesta sugerida</span><h2>Itens para a próxima conversa</h2><p>Use o histórico de compras real do estabelecimento quando a integração estiver disponível.</p></section>
     <p className="data-note">O estágio e o histórico de compras exibidos são dados de demonstração, ainda não integrados ao sistema de vendas.</p>
@@ -269,27 +298,55 @@ function Sobre({ records, visits, clientsById, queued, online, reset }) {
   const visitLabel = (outcome) => ({
     decisor: 'Falou com quem decide', dono_ausente: 'Responsável ausente', fechado: 'Estabelecimento fechado',
     cadastro_pedido: 'Cadastro e primeiro pedido', cadastro: 'Cadastro feito', pedido_ajuda: 'Pedido feito com ajuda',
-    pedido: 'Pedido feito', vai_pedir: 'Vai pedir pelo app', nao: 'Não comprou nesta visita',
+    pedido: 'Pedido feito', pedido_autonomo: 'Compra autônoma pelo app', vai_pedir: 'Vai pedir pelo app', nao: 'Não comprou nesta visita',
   }[outcome] || 'Visita registrada');
   const sortedVisits = [...visits].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   return <div className="scroll-content about-content">
     <section className="profile-card"><span className="avatar avatar-large">{base.vendedor.charAt(0)}</span><span><h1>{base.vendedor === 'Hugo' ? 'Hugo Parente' : base.vendedor}</h1><p className="muted">Vendedor de campo · {base.cidade}</p></span></section>
-    <section className="about-section"><h2 className="section-label">Pontuação</h2><div className="list-card"><div className="list-row"><span>Cliente ativado</span><strong>+1,5</strong></div><div className="list-row"><span>Cliente em risco recuperado</span><strong>+1</strong></div><div className="list-row"><span>Visita registrada</span><strong>+0,5</strong></div></div><p className="footnote">Valores ilustrativos. A regra oficial de pontos ainda precisa ser conectada.</p></section>
+    <section className="about-section"><h2 className="section-label">Pontuação de aquisição</h2><div className="list-card"><div className="list-row"><span>Estabelecimento ICP MEI conquistado</span><strong>+0,5</strong></div><div className="list-row"><span>Estabelecimento ICP não MEI conquistado</span><strong>+1</strong></div><div className="list-row"><span>Estabelecimento ICP de alto potencial de compra</span><strong>+3</strong></div></div><p className="footnote">Critérios conforme o case. Os perfis dos estabelecimentos nesta demonstração são simulados.</p></section>
     <section className="about-section"><h2 className="section-label">Suporte</h2><div className="list-card"><div className="list-row support-row"><Icon name="phone"/><strong>Falar com o supervisor</strong><span className="muted support-placeholder">Contato a configurar</span></div><div className="list-row support-row"><Icon name="help"/><strong>Central de ajuda</strong><span className="muted support-placeholder">Em breve</span></div></div><p className="footnote">Adicione o telefone do supervisor e o endereço oficial da central de ajuda.</p></section>
     <section className="about-section"><h2 className="section-label">Dados e conexão</h2><div className="list-card status-list"><div className="list-row"><span>Conexão</span><strong className={online ? 'text-green' : 'text-amber'}>{online ? 'Online' : 'Offline'}</strong></div><div className="list-row"><span>Visitas salvas neste aparelho</span><strong>{count}</strong></div><div className="list-row"><span>Na fila local</span><strong>{queued}</strong></div></div><p className="footnote">Os registros permanecem neste dispositivo. O envio automático depende de uma API de sincronização que ainda não está configurada.</p></section>
     <section className="about-section"><h2 className="section-label">Visitas registradas</h2>{sortedVisits.length ? <div className="list-card visit-history">{sortedVisits.map((visit) => {
       const client = clientsById[visit.clientId];
       const date = new Date(visit.createdAt);
       const dateLabel = Number.isNaN(date.getTime()) ? 'Data não disponível' : date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-      return <article className="visit-history-row" key={visit.id}><div className="visit-history-head"><strong>{client?.nome || 'Estabelecimento'}</strong><time dateTime={visit.createdAt}>{dateLabel}</time></div><span className="visit-result">{visitLabel(visit.outcome)}</span>{visit.note && <p>{visit.note}</p>}{visit.photo && <img className="visit-photo" src={visit.photo} alt={`Foto registrada na visita a ${client?.nome || 'estabelecimento'}`}/>}<small className={visit.syncStatus === 'offline' ? 'text-amber' : 'muted'}>{visit.syncStatus === 'offline' ? 'Salva offline neste aparelho' : 'Aguardando sincronização'}</small></article>;
+      return <article className="visit-history-row" key={visit.id}><div className="visit-history-head"><strong>{client?.nome || 'Estabelecimento'}</strong><time dateTime={visit.createdAt}>{dateLabel}</time></div><span className="visit-result">{visitLabel(visit.outcome)}</span>{visit.note && <p>{visit.note}</p>}{visit.photo && <img className="visit-photo" src={visit.photo} alt={`Foto registrada na visita a ${client?.nome || 'estabelecimento'}`}/>}<small className={visit.syncStatus === 'offline' ? 'text-amber' : 'muted'}>{visit.syncStatus === 'offline' ? 'Salva offline neste aparelho' : 'Salva neste aparelho; sem sincronização com o CRM'}</small></article>;
     })}</div> : <div className="list-card visit-history-empty">Nenhuma visita registrada ainda. Use “Registrar visita” em Meu dia ou no perfil de um estabelecimento.</div>}</section>
     <div className="signout"><button onClick={reset}>Limpar dados desta demonstração</button><span>praso campo · versão 2.0</span></div>
   </div>;
 }
 
-function ClientDetails({ client, onClose, onCheckin }) {
+function VisitQuickSummary({ client, visits, compact = false }) {
+  const savedVisit = [...visits].filter((visit) => visit.clientId === client.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+  const sampleVisit = !savedVisit ? client.visitas?.[0] : null;
+  const result = savedVisit?.outcome || sampleVisit?.resultado;
+  const objection = savedVisit?.objection || sampleVisit?.objecao;
+  const who = savedVisit ? (savedVisit.contactName || 'Não registrado') : sampleVisit?.contato || client.decisorConfirmado || client.decisor || 'A confirmar';
+  const promise = savedVisit?.promise || sampleVisit?.promessa || savedVisit?.note || sampleVisit?.observacao || 'Não registrado';
+  const encounter = savedVisit?.encounter || sampleVisit?.encontro;
+  const outcomeText = result ? visitLabelText(result) : 'Sem resultado registrado';
+  const when = savedVisit?.createdAt
+    ? new Date(savedVisit.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+    : sampleVisit?.diasAtras != null ? `há ${sampleVisit.diasAtras} dias · exemplo` : 'Sem visita anterior registrada';
+  return <section className={`visit-brief ${compact ? 'visit-brief-compact' : ''}`} aria-label="Resumo rápido da última visita">
+    <div className="visit-brief-title"><strong>Resumo de 10 segundos</strong><span>{savedVisit ? when : sampleVisit ? when : 'Histórico local'}</span></div>
+    {savedVisit || sampleVisit ? <div className="visit-brief-grid">
+      <p><b>Com quem</b><span>{who}</span></p>
+      <p><b>Última visita</b><span>{encounter ? `${visitLabelText(encounter)} · ` : ''}{outcomeText}</span></p>
+      <p><b>Objeção</b><span>{objection && OBJECOES[objection] ? OBJECOES[objection].rotulo : 'Não registrada'}</span></p>
+      <p><b>Combinado</b><span>{promise}</span></p>
+    </div> : <p className="visit-brief-empty">Ainda não há visita registrada para este estabelecimento.</p>}
+    {sampleVisit && !savedVisit && <small className="visit-brief-disclaimer">Dados simulados da demonstração; confirme antes de usar.</small>}
+  </section>;
+}
+
+function visitLabelText(outcome) {
+  return ({ decisor: 'Falou com quem decide', dono_ausente: 'Responsável ausente', fechado: 'Estabelecimento fechado', cadastro_pedido: 'Cadastro e primeiro pedido', cadastro: 'Cadastro feito', pedido_ajuda: 'Pedido feito com ajuda', pedido: 'Pedido feito', pedido_autonomo: 'Compra autônoma pelo app', vai_pedir: 'Vai pedir pelo app', nao: 'Não comprou nesta visita' })[outcome] || outcome || 'Visita registrada';
+}
+
+function ClientDetails({ client, visits, onClose, onCheckin }) {
   useDialogFocus();
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && onClose()}><section className="full-modal" role="dialog" aria-modal="true" aria-label={client.nome} onKeyDown={(event) => event.key === 'Escape' && onClose()}><div className="modal-top"><button className="icon-button" aria-label="Fechar detalhes" onClick={onClose}><Icon name="close"/></button><span>Detalhes do cliente</span></div><h1>{client.nome}</h1><p className="muted">{FOOD_SEGMENT(client.tipo)} · {client.endereco || client.bairro || base.cidade}</p><a className="source-link" href={`https://www.openstreetmap.org/${client.osmElemento}/${client.osmId}`} target="_blank" rel="noreferrer">Conferir registro no OpenStreetMap</a><div className="list-card detail-list"><div className="list-row"><span>Etapa</span><strong>{ETAPAS[client.etapa]}</strong></div><div className="list-row"><span>Objetivo sugerido</span><strong>{stageGoal(client)}</strong></div><div className="list-row"><span>Contato</span><strong>{client.decisor || 'A confirmar na visita'}</strong></div><div className="list-row"><span>Janela informada</span><strong>{client.janelaDono || 'A confirmar'}</strong></div></div><button className="primary-button modal-cta" onClick={onCheckin}><Icon name="plus"/>Registrar visita</button></section></div>;
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && onClose()}><section className="full-modal" role="dialog" aria-modal="true" aria-label={client.nome} onKeyDown={(event) => event.key === 'Escape' && onClose()}><div className="modal-top"><button className="icon-button" aria-label="Fechar detalhes" onClick={onClose}><Icon name="close"/></button><span>Detalhes do cliente</span></div><h1>{client.nome}</h1><p className="muted">{FOOD_SEGMENT(client.tipo)} · {client.endereco || client.bairro || base.cidade}</p>{client.osmElemento && client.osmId ? <a className="source-link" href={`https://www.openstreetmap.org/${client.osmElemento}/${client.osmId}`} target="_blank" rel="noreferrer">Conferir registro no OpenStreetMap</a> : <p className="source-link muted">Lead cadastrado em campo</p>}{client.fotoFachada && <img className="facade-photo" src={client.fotoFachada} alt={`Fachada de ${client.nome}`}/>}<VisitQuickSummary client={client} visits={visits}/><div className="list-card detail-list"><div className="list-row"><span>Etapa</span><strong>{ETAPAS[client.etapa] || 'Lead'}</strong></div><div className="list-row"><span>Objetivo sugerido</span><strong>{stageGoal(client)}</strong></div><div className="list-row"><span>Contato</span><strong>{client.decisorConfirmado || client.decisor || 'A confirmar na visita'}</strong></div><div className="list-row"><span>Janela informada</span><strong>{client.janelaDono || 'A confirmar'}</strong></div></div><button className="primary-button modal-cta" onClick={onCheckin}><Icon name="plus"/>Registrar visita</button></section></div>;
 }
 
 function Checkin({ client, onClose, onSave }) {
@@ -298,7 +355,7 @@ function Checkin({ client, onClose, onSave }) {
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState('');
   const [saving, setSaving] = useState(false);
-  const step = !response.encontro ? 'encontro' : response.encontro === 'dono_ausente' ? 'janela' : !response.resultado && response.encontro !== 'fechado' ? 'resultado' : !response.objecao && response.resultado === 'nao' ? 'objecao' : 'review';
+  const step = !response.encontro ? 'encontro' : response.encontro === 'dono_ausente' && !response.janelaRespondida ? 'janela' : !response.resultado && response.encontro !== 'fechado' ? 'resultado' : !response.objecao && response.resultado === 'nao' ? 'objecao' : 'review';
   const choose = (next) => setResponse((value) => ({ ...value, ...next }));
   const onPhoto = async (event) => {
     const file = event.target.files?.[0];
@@ -316,11 +373,32 @@ function Checkin({ client, onClose, onSave }) {
   };
   return <div className="modal-backdrop"><section className="full-modal checkin-modal" role="dialog" aria-modal="true" aria-label={`Registrar visita em ${client.nome}`} onKeyDown={(event) => event.key === 'Escape' && onClose()}><div className="modal-top"><button className="text-back" onClick={onClose}>Cancelar</button><strong>{client.nome}</strong></div>
     {step === 'encontro' && <><PageTitle title="Conseguiu falar com quem decide?" subtitle="Escolha uma opção para registrar a visita."/><div className="choice-list"><Choice onClick={() => choose({ encontro: 'decisor' })}>Sim, falei com quem decide</Choice><Choice onClick={() => choose({ encontro: 'dono_ausente' })}>Não estava</Choice><Choice onClick={() => choose({ encontro: 'fechado' })}>Estava fechado</Choice></div></>}
-    {step === 'janela' && <><PageTitle title="Quando ele costuma estar?" subtitle="Esse horário ajuda a equipe na próxima visita."/><div className="choice-list">{JANELAS_OPCOES.map((value) => <Choice key={value} onClick={() => choose({ janela: value, resultado: 'nao', objecao: 'tempo' })}>{value}</Choice>)}<Choice onClick={() => choose({ resultado: 'nao', objecao: 'tempo' })}>Não souberam informar</Choice></div></>}
+    {step === 'janela' && <><PageTitle title="Quando ele costuma estar?" subtitle="Esse horário ajuda a equipe na próxima visita."/><div className="choice-list">{JANELAS_OPCOES.map((value) => <Choice key={value} onClick={() => choose({ janela: value, janelaRespondida: true, resultado: 'nao', objecao: 'tempo' })}>{value}</Choice>)}<Choice onClick={() => choose({ janelaRespondida: true, resultado: 'nao', objecao: 'tempo' })}>Não souberam informar</Choice></div></>}
     {step === 'resultado' && <><PageTitle title="Como terminou a conversa?" subtitle="Selecione o resultado que melhor representa a visita."/><div className="choice-list">{resultadosPorEtapa(client.etapa).map((option) => <Choice key={option.id} onClick={() => choose({ resultado: option.id })}>{option.t}</Choice>)}</div></>}
     {step === 'objecao' && <><PageTitle title="O que mais pesou?" subtitle="A objeção principal orienta o próximo passo."/><div className="choice-list">{Object.entries(OBJECOES).map(([key, objection]) => <Choice key={key} onClick={() => choose({ objecao: key })}>{objection.rotulo}</Choice>)}</div></>}
-    {step === 'review' && <><PageTitle title="Resumo da visita" subtitle="Adicione um comentário ou uma foto se for útil."/><div className="card result-card"><span className="text-green">✓ Resultado selecionado</span><strong>{response.resultado || response.encontro}</strong></div><label className="field-label">Observação <span className="muted">(opcional)</span><textarea value={note} onChange={(event) => setNote(event.target.value)} rows="4" maxLength="500" placeholder="Anote o combinado ou o próximo passo"/></label><label className="upload-button">{photo ? 'Foto anexada ✓' : 'Adicionar foto (opcional)'}<input type="file" accept="image/*" capture="environment" onChange={onPhoto}/></label>{photo && <img className="photo-preview" src={photo} alt="Prévia da foto anexada"/>}<button className="primary-button save-visit" disabled={saving} onClick={() => { setSaving(true); onSave(client, response, note, photo); }}>{saving ? 'Salvando…' : 'Salvar visita'}</button></>}
+    {step === 'review' && <><PageTitle title="Resumo da visita" subtitle="Registre o contexto para preparar o próximo contato."/><div className="card result-card"><span className="text-green">✓ Resultado selecionado</span><strong>{visitLabelText(response.resultado || response.encontro)}</strong></div><label className="field-label">Com quem você falou? <span className="muted">(nome ou função)</span><input className="text-input" value={response.contactName || ''} onChange={(event) => choose({ contactName: event.target.value })} maxLength="100" placeholder="Ex.: Ana, responsável pelas compras"/></label><label className="field-label">O que ficou combinado ou prometido? <span className="muted">(opcional)</span><textarea value={response.promise || ''} onChange={(event) => choose({ promise: event.target.value })} rows="2" maxLength="240" placeholder="Ex.: enviar condições de troca pelo WhatsApp"/></label><label className="field-label">Observação <span className="muted">(opcional)</span><textarea value={note} onChange={(event) => setNote(event.target.value)} rows="3" maxLength="500" placeholder="Outro contexto útil para a próxima visita"/></label><label className="upload-button">{photo ? 'Foto anexada ✓' : 'Adicionar foto (opcional)'}<input type="file" accept="image/*" capture="environment" onChange={onPhoto}/></label>{photo && <img className="photo-preview" src={photo} alt="Prévia da foto anexada"/>}<button className="primary-button save-visit" disabled={saving} onClick={() => { setSaving(true); onSave(client, response, note, photo); }}>{saving ? 'Salvando…' : 'Salvar visita'}</button></>}
   </section></div>;
+}
+
+function NewLeadForm({ location, onClose, onSave }) {
+  useDialogFocus();
+  const [nome, setNome] = useState('');
+  const [tipo, setTipo] = useState('Lanchonete');
+  const [foto, setFoto] = useState('');
+  const [error, setError] = useState('');
+  async function onPhoto(event) {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    try {
+      const image = await createImageBitmap(file);
+      const scale = Math.min(1, 1000 / Math.max(image.width, image.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale));
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height); image.close();
+      setFoto(canvas.toDataURL('image/jpeg', .65)); setError('');
+    } catch { setError('Não foi possível carregar essa foto. Tente outra imagem.'); }
+  }
+  return <div className="modal-backdrop"><section className="full-modal checkin-modal" role="dialog" aria-modal="true" aria-label="Cadastrar novo lead" onKeyDown={(event) => event.key === 'Escape' && onClose()}><div className="modal-top"><button className="text-back" onClick={onClose}>Cancelar</button><strong>Novo lead aqui</strong></div><PageTitle title="Cadastre o estabelecimento" subtitle="A localização atual será marcada no mapa."/><label className="field-label">Nome do estabelecimento<input className="text-input" autoComplete="organization" value={nome} onChange={(event) => setNome(event.target.value)} maxLength="100" placeholder="Ex.: Lanchonete da Praça"/></label><label className="field-label">Tipo de estabelecimento<select className="text-input" value={tipo} onChange={(event) => setTipo(event.target.value)}>{['Padaria', 'Restaurante', 'Lanchonete', 'Pizzaria', 'Outro'].map((option) => <option key={option}>{option}</option>)}</select></label><label className="field-label">Foto da fachada<span className="upload-button">{foto ? 'Foto anexada ✓ · trocar foto' : 'Tirar ou escolher foto'}<input type="file" accept="image/*" capture="environment" onChange={onPhoto}/></span></label>{foto && <img className="photo-preview" src={foto} alt="Prévia da fachada do estabelecimento"/>}<div className="lead-location-card"><Icon name="pin" size={18}/><span><strong>Localização capturada</strong><small>{location.lat.toFixed(5)}, {location.lng.toFixed(5)}</small></span></div>{error && <p className="lead-location-error" role="alert">{error}</p>}<p className="footnote">Nome, localização e foto ficam salvos somente neste aparelho. Você pode complementar os dados depois.</p><button className="primary-button save-visit" disabled={!nome.trim() || !foto} onClick={() => onSave({ nome, tipo, foto })}>Salvar lead</button></section></div>;
 }
 
 function Choice({ children, onClick }) { return <button className="choice-button" onClick={onClick}>{children}<Icon name="chevron"/></button>; }
