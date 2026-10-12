@@ -125,7 +125,7 @@ export default function App() {
   }
 
   function saveNewLead(lead) {
-    const client = { id: `lead-${crypto.randomUUID?.() || Date.now()}`, nome: lead.nome.trim(), tipo: lead.tipo, lat: newLeadLocation.lat, lng: newLeadLocation.lng, bairro: 'Lead de campo', endereco: 'Localização registrada pelo vendedor', fonte: 'Cadastro de campo', porte: null, pontos: 0, etapa: 'lead', janelaDono: '', decisor: 'A confirmar', visitas: [], sinais: [], compras: [], fotoFachada: lead.foto || '', criadoEm: new Date().toISOString() };
+    const client = { id: `lead-${crypto.randomUUID?.() || Date.now()}`, nome: lead.nome.trim(), tipo: lead.tipo, lat: newLeadLocation.lat, lng: newLeadLocation.lng, bairro: 'Lead de campo', endereco: 'Localização registrada pelo vendedor', fonte: 'Cadastro de campo', porte: null, pontos: 0, etapa: 'lead', janelaDono: '', decisor: 'A confirmar', visitas: [], sinais: [], compras: [], fotoFachada: lead.foto, criadoEm: new Date().toISOString() };
     setState((old) => ({ ...old, estabelecimentos: [client, ...old.estabelecimentos] }));
     setNewLeadLocation(null);
     setNotice('Lead salvo neste aparelho e adicionado ao mapa.');
@@ -319,25 +319,12 @@ function Sobre({ records, visits, clientsById, queued, online, reset }) {
 function VisitQuickSummary({ client, visits, compact = false }) {
   const savedVisit = [...visits].filter((visit) => visit.clientId === client.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
   const sampleVisit = !savedVisit ? client.visitas?.[0] : null;
-  const result = savedVisit?.outcome || sampleVisit?.resultado;
+  const outcome = savedVisit?.outcome || sampleVisit?.resultado;
   const objection = savedVisit?.objection || sampleVisit?.objecao;
-  const who = savedVisit ? (savedVisit.contactName || 'Não registrado') : sampleVisit?.contato || client.decisorConfirmado || client.decisor || 'A confirmar';
-  const promise = savedVisit?.promise || sampleVisit?.promessa || savedVisit?.note || sampleVisit?.observacao || 'Não registrado';
-  const encounter = savedVisit?.encounter || sampleVisit?.encontro;
-  const outcomeText = result ? visitLabelText(result) : 'Sem resultado registrado';
-  const when = savedVisit?.createdAt
-    ? new Date(savedVisit.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
-    : sampleVisit?.diasAtras != null ? `há ${sampleVisit.diasAtras} dias · exemplo` : 'Sem visita anterior registrada';
-  return <section className={`visit-brief ${compact ? 'visit-brief-compact' : ''}`} aria-label="Resumo rápido da última visita">
-    <div className="visit-brief-title"><strong>Resumo de 10 segundos</strong><span>{savedVisit ? when : sampleVisit ? when : 'Histórico local'}</span></div>
-    {savedVisit || sampleVisit ? <div className="visit-brief-grid">
-      <p><b>Com quem</b><span>{who}</span></p>
-      <p><b>Última visita</b><span>{encounter ? `${visitLabelText(encounter)} · ` : ''}{outcomeText}</span></p>
-      <p><b>Objeção</b><span>{objection && OBJECOES[objection] ? OBJECOES[objection].rotulo : 'Não registrada'}</span></p>
-      <p><b>Combinado</b><span>{promise}</span></p>
-    </div> : <p className="visit-brief-empty">Ainda não há visita registrada para este estabelecimento.</p>}
-    {sampleVisit && !savedVisit && <small className="visit-brief-disclaimer">Dados simulados da demonstração; confirme antes de usar.</small>}
-  </section>;
+  const contact = savedVisit ? savedVisit.contactName || 'Não registrado' : sampleVisit?.contato || client.decisorConfirmado || client.decisor || 'A confirmar';
+  const promise = savedVisit ? savedVisit.promise || savedVisit.note || 'Não registrado' : sampleVisit?.promessa || sampleVisit?.observacao || 'Não registrado';
+  const when = savedVisit?.createdAt ? new Date(savedVisit.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : sampleVisit?.diasAtras != null ? `há ${sampleVisit.diasAtras} dias · exemplo` : 'Histórico local';
+  return <section className={`visit-brief ${compact ? 'visit-brief-compact' : ''}`} aria-label="Resumo rápido da última visita"><div className="visit-brief-title"><strong>Resumo de 10 segundos</strong><span>{when}</span></div>{savedVisit || sampleVisit ? <div className="visit-brief-grid"><p><b>Com quem</b><span>{contact}</span></p><p><b>Última visita</b><span>{visitLabelText(outcome)}</span></p><p><b>Objeção</b><span>{objection && OBJECOES[objection] ? OBJECOES[objection].rotulo : 'Não registrada'}</span></p><p><b>Combinado</b><span>{promise}</span></p></div> : <p className="visit-brief-empty">Ainda não há visita registrada para este estabelecimento.</p>}{sampleVisit && !savedVisit && <small className="visit-brief-disclaimer">Dados simulados da demonstração; confirme antes de usar.</small>}</section>;
 }
 
 function visitLabelText(outcome) {
@@ -391,14 +378,13 @@ function NewLeadForm({ location, onClose, onSave }) {
     if (!file || !file.type.startsWith('image/')) return;
     try {
       const image = await createImageBitmap(file);
-      const scale = Math.min(1, 1000 / Math.max(image.width, image.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale));
+      const scale = Math.min(1, 800 / Math.max(image.width, image.height));
+      const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale));
       canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height); image.close();
-      setFoto(canvas.toDataURL('image/jpeg', .65)); setError('');
+      setFoto(canvas.toDataURL('image/jpeg', .55)); setError('');
     } catch { setError('Não foi possível carregar essa foto. Tente outra imagem.'); }
   }
-  return <div className="modal-backdrop"><section className="full-modal checkin-modal" role="dialog" aria-modal="true" aria-label="Cadastrar novo lead" onKeyDown={(event) => event.key === 'Escape' && onClose()}><div className="modal-top"><button className="text-back" onClick={onClose}>Cancelar</button><strong>Novo lead aqui</strong></div><PageTitle title="Cadastre o estabelecimento" subtitle="A localização atual será marcada no mapa."/><label className="field-label">Nome do estabelecimento<input className="text-input" autoComplete="organization" value={nome} onChange={(event) => setNome(event.target.value)} maxLength="100" placeholder="Ex.: Lanchonete da Praça"/></label><label className="field-label">Tipo de estabelecimento<select className="text-input" value={tipo} onChange={(event) => setTipo(event.target.value)}>{['Padaria', 'Restaurante', 'Lanchonete', 'Pizzaria', 'Outro'].map((option) => <option key={option}>{option}</option>)}</select></label><label className="field-label">Foto da fachada<span className="upload-button">{foto ? 'Foto anexada ✓ · trocar foto' : 'Tirar ou escolher foto'}<input type="file" accept="image/*" capture="environment" onChange={onPhoto}/></span></label>{foto && <img className="photo-preview" src={foto} alt="Prévia da fachada do estabelecimento"/>}<div className="lead-location-card"><Icon name="pin" size={18}/><span><strong>Localização capturada</strong><small>{location.lat.toFixed(5)}, {location.lng.toFixed(5)}</small></span></div>{error && <p className="lead-location-error" role="alert">{error}</p>}<p className="footnote">Nome, localização e foto ficam salvos somente neste aparelho. Você pode complementar os dados depois.</p><button className="primary-button save-visit" disabled={!nome.trim() || !foto} onClick={() => onSave({ nome, tipo, foto })}>Salvar lead</button></section></div>;
+  return <div className="modal-backdrop"><section className="full-modal checkin-modal" role="dialog" aria-modal="true" aria-label="Cadastrar novo lead" onKeyDown={(event) => event.key === 'Escape' && onClose()}><div className="modal-top"><button className="text-back" onClick={onClose}>Cancelar</button><strong>Novo lead aqui</strong></div><PageTitle title="Cadastre o estabelecimento" subtitle="A localização atual será marcada no mapa."/><label className="field-label">Nome do estabelecimento<input className="text-input" autoComplete="organization" value={nome} onChange={(event) => setNome(event.target.value)} maxLength="100" placeholder="Ex.: Lanchonete da Praça"/></label><label className="field-label">Tipo de estabelecimento<select className="text-input" value={tipo} onChange={(event) => setTipo(event.target.value)}>{['Padaria', 'Restaurante', 'Lanchonete', 'Pizzaria', 'Outro'].map((option) => <option key={option}>{option}</option>)}</select></label><div className="field-label">Foto da fachada (obrigatória)<label className="upload-button">{foto ? 'Foto anexada ✓ · trocar foto' : 'Tirar ou escolher foto'}<input type="file" accept="image/*" capture="environment" onChange={onPhoto}/></label></div>{foto && <img className="photo-preview" src={foto} alt="Prévia da fachada do estabelecimento"/>}<div className="lead-location-card"><Icon name="pin" size={18}/><span><strong>Localização capturada</strong><small>{location.lat.toFixed(5)}, {location.lng.toFixed(5)}</small></span></div>{error && <p className="lead-location-error" role="alert">{error}</p>}<p className="footnote">Nome, localização e foto ficam salvos somente neste aparelho. Você pode complementar os dados depois.</p><button className="primary-button save-visit" disabled={!nome.trim() || !foto} onClick={() => onSave({ nome, tipo, foto })}>Salvar lead</button></section></div>;
 }
 
 function Choice({ children, onClick }) { return <button className="choice-button" onClick={onClick}>{children}<Icon name="chevron"/></button>; }
