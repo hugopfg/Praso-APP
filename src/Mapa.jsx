@@ -74,7 +74,7 @@ function elementoPino(it) {
   return el;
 }
 
-function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, viewportKey = '', classe = '', localizar = false, chave, falhou }) {
+function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, viewportKey = '', classe = '', localizar = false, chave, falhou, selectionMode = false, onMapClick }) {
   const caixa = useRef(null);
   const mapa = useRef(null);
   const Marcador = useRef(null);
@@ -113,6 +113,14 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
     return () => { vivo = false; };
   }, [chave, falhou, localizar]);
 
+  useEffect(() => {
+    if (!pronto || !selectionMode || !mapa.current) return undefined;
+    const listener = mapa.current.addListener('click', (event) => {
+      if (event.latLng) onMapClick?.({ lat: event.latLng.lat(), lng: event.latLng.lng() });
+    });
+    return () => listener.remove();
+  }, [pronto, selectionMode, onMapClick]);
+
   // Redesenha pinos e rota quando a lista muda
   useEffect(() => {
     if (!pronto) return;
@@ -132,7 +140,7 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
         title: `${it.nome} — toque para ver detalhes`,
         gmpClickable: true,
       });
-      mk.addEventListener('gmp-click', () => aoTocar?.(it.id));
+      mk.addEventListener('gmp-click', () => selectionMode ? onMapClick?.(pos) : aoTocar?.(it.id));
       marcadores.current.push(mk);
     });
 
@@ -157,7 +165,7 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
       });
     }
 
-  }, [pronto, itens, rota, routePath, aoTocar]);
+  }, [pronto, itens, rota, routePath, aoTocar, selectionMode, onMapClick]);
 
   // Enquadra somente na primeira carga e quando busca/filtros mudam.
   // Selecionar um pin atualiza o painel sem alterar o zoom escolhido pela pessoa.
@@ -213,7 +221,7 @@ function MapaGoogle({ itens, rota = false, routePath = [], aoTocar, onLocation, 
 
 /* ---------- Mapa alternativo (Leaflet + OpenStreetMap) ---------- */
 
-function MapaLeaflet({ itens, rota = false, routePath = [], aoTocar, onLocation, viewportKey = '', classe = '', localizar = false }) {
+function MapaLeaflet({ itens, rota = false, routePath = [], aoTocar, onLocation, viewportKey = '', classe = '', localizar = false, selectionMode = false, onMapClick }) {
   const caixa = useRef(null);
   const mapa = useRef(null);
   const camada = useRef(null);
@@ -229,6 +237,14 @@ function MapaLeaflet({ itens, rota = false, routePath = [], aoTocar, onLocation,
     mapa.current = m;
     return () => m.remove();
   }, []);
+
+  useEffect(() => {
+    const m = mapa.current;
+    if (!m || !selectionMode) return undefined;
+    const onClick = (event) => onMapClick?.({ lat: event.latlng.lat, lng: event.latlng.lng });
+    m.on('click', onClick);
+    return () => m.off('click', onClick);
+  }, [selectionMode, onMapClick]);
 
   // Redesenha pinos quando a lista muda
   useEffect(() => {
@@ -253,13 +269,13 @@ function MapaLeaflet({ itens, rota = false, routePath = [], aoTocar, onLocation,
         iconAnchor: [22, 52],
       });
       L.marker([it.lat, it.lng], { icon: icone, keyboard: true, title: it.nome })
-        .on('click', () => aoTocar?.(it.id))
+        .on('click', () => selectionMode ? onMapClick?.({ lat: it.lat, lng: it.lng }) : aoTocar?.(it.id))
         .addTo(camada.current);
     });
     // O mapa pode nascer num contêiner que ainda está ganhando tamanho.
     const t = setTimeout(() => m.invalidateSize(), 80);
     return () => clearTimeout(t);
-  }, [itens, rota, routePath, aoTocar]);
+  }, [itens, rota, routePath, aoTocar, selectionMode, onMapClick]);
 
   useEffect(() => {
     const m = mapa.current;

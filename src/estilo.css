@@ -179,6 +179,10 @@ button.list-row { width: 100%; padding: 6px 0; background: transparent; border-t
 .map-full { position: absolute; inset: 0; min-height: 0; height: auto !important; border: 0 !important; border-radius: 0 !important; }
 .map-full .mapa-caixa { position: absolute; inset: 0; }
 .map-search-wrap { position: absolute; z-index: 5; top: 10px; left: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.map-pick-hint { position: absolute; z-index: 9; top: 12px; left: 12px; right: 12px; min-height: 52px; padding: 6px 8px 6px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); box-shadow: 0 4px 14px rgba(15,27,61,.14); color: var(--ink); pointer-events: none; }
+.map-pick-hint span { font-size: 13px; }
+.map-pick-hint small { color: var(--muted); font-size: 12px; }
+.map-pick-hint button { min-height: 44px; padding: 0 12px; border: 0; border-radius: var(--r-sm); background: var(--blue-tint); color: var(--blue-dark); font-weight: 700; pointer-events: auto; }
 .map-search { height: 48px; padding: 0 12px; display: flex; align-items: center; gap: 9px; border: 1px solid rgba(214,224,245,.9); border-radius: var(--r-md); background: var(--surface); box-shadow: 0 4px 14px rgba(15,27,61,.12); color: var(--muted); pointer-events: auto; }
 .new-lead-button { width: fit-content; min-height: 48px; padding: 0 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--blue-dark); box-shadow: 0 3px 10px rgba(15,27,61,.1); font-size: 13px; font-weight: 700; pointer-events: auto; }
 .new-lead-button:disabled { opacity: .7; }
@@ -226,6 +230,10 @@ button.list-row { width: 100%; padding: 6px 0; background: transparent; border-t
 .lead-location-card span { display: flex; flex-direction: column; gap: 3px; }
 .lead-location-card strong { color: var(--ink); font-size: 12px; }
 .lead-location-card small { color: var(--muted); font-size: 11px; }
+.lead-location-actions { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.lead-location-actions .outline-button { min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.lead-coordinates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lead-coordinates .field-label { min-width: 0; }
 
 .about-content { gap: 20px; }
 .profile-card { display: flex; align-items: center; gap: 14px; padding: 5px 2px; }

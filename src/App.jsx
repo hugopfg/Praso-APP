@@ -67,7 +67,9 @@ export default function App() {
   const [tab, go] = usePath();
   const [selected, setSelected] = useState(null);
   const [checkinId, setCheckinId] = useState(null);
+  const [newLeadOpen, setNewLeadOpen] = useState(false);
   const [newLeadLocation, setNewLeadLocation] = useState(null);
+  const [pickingLeadLocation, setPickingLeadLocation] = useState(false);
   const [leadLocationError, setLeadLocationError] = useState('');
   const [locatingLead, setLocatingLead] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
@@ -115,6 +117,12 @@ export default function App() {
 
   function startNewLead() {
     setLeadLocationError('');
+    setNewLeadLocation(null);
+    setNewLeadOpen(true);
+  }
+
+  function locateNewLead() {
+    setLeadLocationError('');
     if (!navigator.geolocation) { setLeadLocationError('Este navegador não oferece acesso à localização.'); return; }
     setLocatingLead(true);
     navigator.geolocation.getCurrentPosition(
@@ -124,10 +132,16 @@ export default function App() {
     );
   }
 
+  function chooseLeadLocation(position) {
+    setNewLeadLocation(position);
+    setLeadLocationError('');
+    setPickingLeadLocation(false);
+  }
+
   function saveNewLead(lead) {
-    const client = { id: `lead-${crypto.randomUUID?.() || Date.now()}`, nome: lead.nome.trim(), tipo: lead.tipo, lat: newLeadLocation.lat, lng: newLeadLocation.lng, bairro: 'Lead de campo', endereco: 'Localização registrada pelo vendedor', fonte: 'Cadastro de campo', porte: null, pontos: 0, etapa: 'lead', janelaDono: '', decisor: 'A confirmar', visitas: [], sinais: [], compras: [], fotoFachada: lead.foto, criadoEm: new Date().toISOString() };
+    const client = { id: `lead-${crypto.randomUUID?.() || Date.now()}`, nome: lead.nome.trim(), tipo: lead.tipo, lat: lead.lat, lng: lead.lng, bairro: 'Lead de campo', endereco: lead.endereco.trim() || 'Endereço a confirmar', fonte: 'Cadastro de campo', porte: null, pontos: 0, etapa: 'lead', janelaDono: '', decisor: lead.contato.trim() || 'A confirmar', telefone: lead.telefone.trim(), observacaoLead: lead.observacao.trim(), visitas: [], sinais: [], compras: [], fotoFachada: lead.foto, criadoEm: new Date().toISOString() };
     setState((old) => ({ ...old, estabelecimentos: [client, ...old.estabelecimentos] }));
-    setNewLeadLocation(null);
+    setNewLeadLocation(null); setNewLeadOpen(false); setPickingLeadLocation(false);
     setNotice('Lead salvo neste aparelho e adicionado ao mapa.');
   }
 
@@ -139,7 +153,7 @@ export default function App() {
   }
 
   const overlayClient = checkinId ? byId[checkinId] : selected ? byId[selected] : null;
-  const modalOpen = Boolean(checkinId || overlayClient || newLeadLocation);
+  const modalOpen = Boolean(checkinId || overlayClient || (newLeadOpen && !pickingLeadLocation));
 
   return (
     <div className="app-shell">
@@ -159,7 +173,7 @@ export default function App() {
 
       <main className={`page page-${tab}`} key={tab} aria-hidden={modalOpen} inert={modalOpen}>
         {tab === 'dia' && <MeuDia day={day} totalPoints={totalPoints} done={visitCount} risks={riskCount} onSelect={setSelected} onOpenMap={() => go('mapa')} />}
-        {tab === 'mapa' && <MapaScreen clients={clients} day={day} onLocation={setSellerPosition} sellerPosition={sellerPosition} onDetails={setSelected} visits={state.filaSincronizacao || []} onNewLead={startNewLead} leadLocationError={leadLocationError} locatingLead={locatingLead} />}
+        {tab === 'mapa' && <MapaScreen clients={clients} day={day} onLocation={setSellerPosition} sellerPosition={sellerPosition} onDetails={setSelected} visits={state.filaSincronizacao || []} onNewLead={startNewLead} leadLocationError={leadLocationError} locatingLead={locatingLead} pickingLeadLocation={pickingLeadLocation} onPickLeadLocation={chooseLeadLocation} onCancelPickLeadLocation={() => setPickingLeadLocation(false)} />}
         {tab === 'ativacao' && <Ativacao clients={activationList} selected={activationClient} done={completedActivations} onSelect={setSelected} />}
         {tab === 'sobre' && <Sobre records={state.registros} visits={state.filaSincronizacao || []} clientsById={byId} queued={state.filaSincronizacao?.length || 0} online={online} reset={resetDemo} />}
       </main>
@@ -173,7 +187,7 @@ export default function App() {
 
       {overlayClient && !checkinId && <ClientDetails client={overlayClient} visits={state.filaSincronizacao || []} onClose={() => setSelected(null)} onCheckin={() => setCheckinId(overlayClient.id)} />}
       {checkinId && byId[checkinId] && <Checkin client={byId[checkinId]} onClose={() => setCheckinId(null)} onSave={saveCheckin} />}
-      {newLeadLocation && <NewLeadForm location={newLeadLocation} onClose={() => setNewLeadLocation(null)} onSave={saveNewLead} />}
+      {newLeadOpen && <NewLeadForm location={newLeadLocation} locationError={leadLocationError} locating={locatingLead} picking={pickingLeadLocation} onLocate={locateNewLead} onPickOnMap={() => setPickingLeadLocation(true)} onClose={() => { setNewLeadOpen(false); setPickingLeadLocation(false); }} onSave={saveNewLead} />}
       {notice && <div className="toast" role="status">{notice}</div>}
     </div>
   );
@@ -225,7 +239,7 @@ function stageGoal(client) {
   return 'Relacionamento';
 }
 
-function MapaScreen({ clients, day, onLocation, sellerPosition, onDetails, visits, onNewLead, leadLocationError, locatingLead }) {
+function MapaScreen({ clients, day, onLocation, sellerPosition, onDetails, visits, onNewLead, leadLocationError, locatingLead, pickingLeadLocation, onPickLeadLocation, onCancelPickLeadLocation }) {
   const [filter, setFilter] = useState('Todos');
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState(day.visitas[0]?.e.id || clients[0]?.id);
@@ -239,13 +253,14 @@ function MapaScreen({ clients, day, onLocation, sellerPosition, onDetails, visit
   const routePath = useMemo(() => sellerPosition && selected ? [sellerPosition, { lat: selected.lat, lng: selected.lng }] : [], [sellerPosition, selected]);
   const startNavigation = (client) => { if (!client) return; window.open(`https://www.google.com/maps/dir/?api=1&destination=${client.lat},${client.lng}`, '_blank', 'noopener,noreferrer'); };
   return <div className="map-page">
-    <Mapa itens={markers} routePath={routePath} aoTocar={setSelectedId} viewportKey={`${filter}:${query}`} classe="map-full" localizar onLocation={onLocation} />
-    <div className="map-search-wrap"><label className="map-search"><Icon name="search"/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cliente" aria-label="Buscar cliente no mapa"/><span>{filtered.length}</span></label>
+    <Mapa itens={markers} routePath={routePath} aoTocar={setSelectedId} viewportKey={`${filter}:${query}`} classe="map-full" localizar onLocation={onLocation} selectionMode={pickingLeadLocation} onMapClick={onPickLeadLocation} />
+    {pickingLeadLocation && <div className="map-pick-hint"><span><strong>Toque no mapa</strong><small> para marcar o local do novo lead</small></span><button onClick={onCancelPickLeadLocation}>Cancelar</button></div>}
+    {!pickingLeadLocation && <div className="map-search-wrap"><label className="map-search"><Icon name="search"/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cliente" aria-label="Buscar cliente no mapa"/><span>{filtered.length}</span></label>
       <button className="new-lead-button" onClick={onNewLead} disabled={locatingLead} aria-live="polite"><Icon name="plus" size={18}/>{locatingLead ? 'Obtendo localização…' : 'Novo lead aqui'}</button>
       {leadLocationError && <p className="lead-location-error" role="alert">{leadLocationError}</p>}
       <div className="map-filters" role="group" aria-label="Filtrar estabelecimentos">{['Todos', 'Leads', 'Em ativação', 'Em risco'].map((name) => <button key={name} className={filter === name ? 'selected-filter' : ''} aria-pressed={filter === name} onClick={() => setFilter(name)}>{name}</button>)}</div>
-    </div>
-    {selected && <section className="bottom-sheet" aria-label="Próxima parada"><div className="sheet-grabber"/><div className="sheet-heading"><div><span className="eyebrow blue-text">Próxima parada · {selected.janelaDono?.split('–')[0] || 'A combinar'}</span><h1>{selected.nome}</h1><p className="muted">{stageGoal(selected)} · {ETAPAS[selected.etapa] || selected.tipo}</p></div><div className="sheet-distance">{sellerPosition ? <><strong>{distanceLabel(sellerPosition, selected)}</strong><small>{walkingTimeLabel(sellerPosition, selected)} a pé · aprox.</small></> : <><strong>—</strong><small>distância</small></>}</div></div><VisitQuickSummary client={selected} visits={visits} compact/><div className="sheet-actions"><button className="outline-button" onClick={() => onDetails(selected.id)}>Detalhes</button><button className="primary-button" onClick={() => startNavigation(selected)}><Icon name="navigate"/>Iniciar rota</button></div></section>}
+    </div>}
+    {!pickingLeadLocation && selected && <section className="bottom-sheet" aria-label="Próxima parada"><div className="sheet-grabber"/><div className="sheet-heading"><div><span className="eyebrow blue-text">Próxima parada · {selected.janelaDono?.split('–')[0] || 'A combinar'}</span><h1>{selected.nome}</h1><p className="muted">{stageGoal(selected)} · {ETAPAS[selected.etapa] || selected.tipo}</p></div><div className="sheet-distance">{sellerPosition ? <><strong>{distanceLabel(sellerPosition, selected)}</strong><small>{walkingTimeLabel(sellerPosition, selected)} a pé · aprox.</small></> : <><strong>—</strong><small>distância</small></>}</div></div><VisitQuickSummary client={selected} visits={visits} compact/><div className="sheet-actions"><button className="outline-button" onClick={() => onDetails(selected.id)}>Detalhes</button><button className="primary-button" onClick={() => startNavigation(selected)}><Icon name="navigate"/>Iniciar rota</button></div></section>}
   </div>;
 }
 
@@ -367,12 +382,28 @@ function Checkin({ client, onClose, onSave }) {
   </section></div>;
 }
 
-function NewLeadForm({ location, onClose, onSave }) {
+function NewLeadForm({ location, locationError, locating, picking, onLocate, onPickOnMap, onClose, onSave }) {
   useDialogFocus();
   const [nome, setNome] = useState('');
   const [tipo, setTipo] = useState('Lanchonete');
   const [foto, setFoto] = useState('');
   const [error, setError] = useState('');
+  const [endereco, setEndereco] = useState('');
+  const [contato, setContato] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [observacao, setObservacao] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  // Sincroniza as coordenadas escolhidas no mapa/GPS sem apagar edição manual posterior.
+  // eslint-disable-next-line react(set-state-in-effect)
+  useEffect(() => {
+    if (!location) return;
+    setLatitude(String(location.lat)); setLongitude(String(location.lng));
+  }, [location]);
+  if (picking) return null;
+  const lat = Number(latitude.trim().replace(',', '.'));
+  const lng = Number(longitude.trim().replace(',', '.'));
+  const validLocation = Number.isFinite(lat) && lat >= -90 && lat <= 90 && Number.isFinite(lng) && lng >= -180 && lng <= 180;
   async function onPhoto(event) {
     const file = event.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
@@ -384,7 +415,7 @@ function NewLeadForm({ location, onClose, onSave }) {
       setFoto(canvas.toDataURL('image/jpeg', .55)); setError('');
     } catch { setError('Não foi possível carregar essa foto. Tente outra imagem.'); }
   }
-  return <div className="modal-backdrop"><section className="full-modal checkin-modal" role="dialog" aria-modal="true" aria-label="Cadastrar novo lead" onKeyDown={(event) => event.key === 'Escape' && onClose()}><div className="modal-top"><button className="text-back" onClick={onClose}>Cancelar</button><strong>Novo lead aqui</strong></div><PageTitle title="Cadastre o estabelecimento" subtitle="A localização atual será marcada no mapa."/><label className="field-label">Nome do estabelecimento<input className="text-input" autoComplete="organization" value={nome} onChange={(event) => setNome(event.target.value)} maxLength="100" placeholder="Ex.: Lanchonete da Praça"/></label><label className="field-label">Tipo de estabelecimento<select className="text-input" value={tipo} onChange={(event) => setTipo(event.target.value)}>{['Padaria', 'Restaurante', 'Lanchonete', 'Pizzaria', 'Outro'].map((option) => <option key={option}>{option}</option>)}</select></label><div className="field-label">Foto da fachada (obrigatória)<label className="upload-button">{foto ? 'Foto anexada ✓ · trocar foto' : 'Tirar ou escolher foto'}<input type="file" accept="image/*" capture="environment" onChange={onPhoto}/></label></div>{foto && <img className="photo-preview" src={foto} alt="Prévia da fachada do estabelecimento"/>}<div className="lead-location-card"><Icon name="pin" size={18}/><span><strong>Localização capturada</strong><small>{location.lat.toFixed(5)}, {location.lng.toFixed(5)}</small></span></div>{error && <p className="lead-location-error" role="alert">{error}</p>}<p className="footnote">Nome, localização e foto ficam salvos somente neste aparelho. Você pode complementar os dados depois.</p><button className="primary-button save-visit" disabled={!nome.trim() || !foto} onClick={() => onSave({ nome, tipo, foto })}>Salvar lead</button></section></div>;
+  return <div className="modal-backdrop"><section className="full-modal checkin-modal" role="dialog" aria-modal="true" aria-label="Cadastrar novo lead" onKeyDown={(event) => event.key === 'Escape' && onClose()}><div className="modal-top"><button className="text-back" onClick={onClose}>Cancelar</button><strong>Novo lead aqui</strong></div><PageTitle title="Cadastre o estabelecimento" subtitle="Marque o ponto no mapa ou informe as coordenadas manualmente."/><div className="lead-location-actions"><button className="outline-button" onClick={onPickOnMap}><Icon name="pin"/>Marcar pino no mapa</button><button className="outline-button" onClick={onLocate} disabled={locating}><Icon name="locate"/>{locating ? 'Obtendo localização…' : 'Usar minha localização'}</button></div>{locationError && <p className="lead-location-error" role="alert">{locationError}</p>}<label className="field-label">Endereço <span className="muted">(opcional)</span><input className="text-input" autoComplete="street-address" value={endereco} onChange={(event) => setEndereco(event.target.value)} maxLength="180" placeholder="Rua, número, bairro e cidade"/></label><div className="lead-coordinates"><label className="field-label">Latitude<input className="text-input" inputMode="decimal" value={latitude} onChange={(event) => setLatitude(event.target.value)} placeholder="Ex.: -3.72"/></label><label className="field-label">Longitude<input className="text-input" inputMode="decimal" value={longitude} onChange={(event) => setLongitude(event.target.value)} placeholder="Ex.: -38.52"/></label></div><p className="footnote">O endereço é salvo como referência. Para posicionar o lead no mapa, use o pino/localização ou informe latitude e longitude.</p><label className="field-label">Nome do estabelecimento<input className="text-input" autoComplete="organization" value={nome} onChange={(event) => setNome(event.target.value)} maxLength="100" placeholder="Ex.: Lanchonete da Praça"/></label><label className="field-label">Tipo de estabelecimento<select className="text-input" value={tipo} onChange={(event) => setTipo(event.target.value)}>{['Padaria', 'Restaurante', 'Lanchonete', 'Pizzaria', 'Outro'].map((option) => <option key={option}>{option}</option>)}</select></label><label className="field-label">Pessoa de contato <span className="muted">(opcional)</span><input className="text-input" value={contato} onChange={(event) => setContato(event.target.value)} maxLength="100" placeholder="Nome de quem compra ou decide"/></label><label className="field-label">Telefone / WhatsApp <span className="muted">(opcional)</span><input className="text-input" type="tel" autoComplete="tel" value={telefone} onChange={(event) => setTelefone(event.target.value)} maxLength="30" placeholder="(85) 99999-9999"/></label><label className="field-label">Observação <span className="muted">(opcional)</span><textarea value={observacao} onChange={(event) => setObservacao(event.target.value)} rows="3" maxLength="500" placeholder="Informações úteis para a próxima abordagem"/></label><div className="field-label">Foto da fachada (obrigatória)<label className="upload-button">{foto ? 'Foto anexada ✓ · trocar foto' : 'Tirar ou escolher foto'}<input type="file" accept="image/*" capture="environment" onChange={onPhoto}/></label></div>{foto && <img className="photo-preview" src={foto} alt="Prévia da fachada do estabelecimento"/>}<div className="lead-location-card"><Icon name="pin" size={18}/><span><strong>{validLocation ? 'Ponto definido no mapa' : 'Localização pendente'}</strong><small>{validLocation ? `${lat.toFixed(5)}, ${lng.toFixed(5)}` : 'Marque o pino ou preencha coordenadas válidas'}</small></span></div>{error && <p className="lead-location-error" role="alert">{error}</p>}<p className="footnote">Os dados ficam salvos somente neste aparelho. Não há integração com CRM configurada.</p><button className="primary-button save-visit" disabled={!nome.trim() || !foto || !validLocation} onClick={() => onSave({ nome, tipo, foto, lat, lng, endereco, contato, telefone, observacao })}>Salvar lead</button></section></div>;
 }
 
 function Choice({ children, onClick }) { return <button className="choice-button" onClick={onClick}>{children}<Icon name="chevron"/></button>; }
